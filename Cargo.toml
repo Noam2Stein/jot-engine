@@ -1,0 +1,3 @@
+[workspace]
+
+members = [ "examples/pong", "jot", "jot_input", "jot_math" , "jot_window"]

@@ -1,0 +1,14 @@
+[package]
+edition = "2024"
+name    = "jot"
+version = "0.1.0"
+
+[dependencies]
+jot_input  = { path = "../jot_input", optional = true }
+jot_math   = { path = "../jot_math", optional = true }
+jot_window = { path = "../jot_window", optional = true }
+
+[features]
+input  = [ "jot_input", "math" ]
+math   = [ "jot_math" ]
+window = [ "input", "jot_window", "math" ]
