@@ -1,13 +1,11 @@
 [package]
 edition = "2024"
-name    = "jot_window"
+name    = "jot_graphics"
 version = "0.1.0"
 
 [dependencies]
 bevy_ecs    = "0.15.3"
-gilrs       = "0.11.0"
 jot_context = { path = "../jot_context" }
-jot_input   = { path = "../jot_input" }
 jot_math    = { path = "../jot_math" }
 pollster    = "0.4.0"
 wgpu        = "24.0.1"

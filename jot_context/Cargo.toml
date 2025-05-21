@@ -1,0 +1,8 @@
+[package]
+edition = "2024"
+name    = "jot_context"
+version = "0.1.0"
+
+[dependencies]
+wgpu  = "24.0.1"
+winit = "0.30.9"

@@ -1,27 +1,25 @@
-use jot::window::*;
+use jot::{context::*, game::*, graphics::*, math::*, window::*};
 
 fn main() {
     run::<Pong>();
 }
 
-struct Pong {
-    fs_switch: FullscreenSwitch,
-}
+struct Pong {}
 
-impl App for Pong {
+impl Game for Pong {
     fn window_attrs() -> WindowAttributes {
         WindowAttributes::default().with_title("Pong")
     }
 
-    fn new(_ctx: &AppContext) -> Self {
-        Self {
-            fs_switch: FullscreenSwitch::new(),
-        }
+    fn new(_ctx: &Context) -> Self {
+        Self {}
     }
 
-    fn event(&mut self, event: &Event, ctx: &AppContext) -> AppFlow {
-        self.fs_switch.event(event, ctx);
+    fn update(&mut self, _delta_time: f64, _ctx: &Context) -> GameFlow {
+        GameFlow::Continue
+    }
 
-        event.into()
+    fn draw(&mut self, output: &jot::graphics::TextureView, ctx: &Context) {
+        clear(vec4(1.0, 0.0, 0.0, 0.0), output, ctx);
     }
 }

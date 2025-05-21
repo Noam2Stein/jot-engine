@@ -8,8 +8,7 @@ pub enum MouseEvent {
         button: MouseButton,
         state: ButtonState,
     },
-    ScrollX(f32),
-    ScrollY(f32),
+    Scroll(Vec2),
 }
 
 pub use winit::event::MouseButton;
