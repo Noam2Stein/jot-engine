@@ -1,30 +1,29 @@
-use jot_context::*;
 use jot_graphics::*;
 use jot_input::*;
 use jot_math::*;
 use jot_window::*;
 
 mod event;
-mod run;
+mod run_;
 pub use event::*;
-pub use run::*;
+pub use run_::*;
 
 pub trait Game {
     fn window_attrs() -> WindowAttributes {
-        WindowAttributes::default()
+        WindowAttributes::default().with_title("Jot Game Window")
     }
 
-    fn new(_ctx: &Context) -> Self;
+    fn new(_ctx: &GPUContext) -> Self;
 
-    fn update(&mut self, _delta_time: f64, _ctx: &Context) -> GameFlow {
+    fn update(&mut self, _delta_time: f64, _ctx: &GPUContext) -> GameFlow {
         GameFlow::Continue
     }
 
-    fn event(&mut self, event: &GameEvent, _ctx: &Context) -> GameFlow {
+    fn event(&mut self, event: &GameEvent, _ctx: &GPUContext) -> GameFlow {
         event.into()
     }
 
-    fn draw(&mut self, output: &TextureView, ctx: &Context) {
+    fn draw(&mut self, output: &TextureView, ctx: &GPUContext) {
         clear(vec4(0.0, 0.0, 0.0, 0.0), output, ctx);
     }
 }

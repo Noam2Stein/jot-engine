@@ -1,3 +1,11 @@
 [workspace]
 
-members = [ "examples/pong", "jot", "jot_context", "jot_game", "jot_graphics", "jot_input", "jot_math" , "jot_window"]
+members = [ "examples/game",
+    "examples/pong",
+    "jot",
+    "jot_game",
+    "jot_graphics",
+    "jot_input",
+    "jot_math",
+    "jot_window",
+]

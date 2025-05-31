@@ -4,7 +4,6 @@ name    = "jot_game"
 version = "0.1.0"
 
 [dependencies]
-jot_context  = { path = "../jot_context" }
 jot_graphics = { path = "../jot_graphics" }
 jot_input    = { path = "../jot_input" }
 jot_math     = { path = "../jot_math" }

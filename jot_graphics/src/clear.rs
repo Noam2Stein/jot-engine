@@ -1,6 +1,6 @@
 use super::*;
 
-pub fn clear(color: Vec4, output: &TextureView, ctx: &Context) {
+pub fn clear(color: Vec4, output: &TextureView, ctx: &GPUContext) {
     let mut encoder = ctx
         .device
         .create_command_encoder(&CommandEncoderDescriptor {

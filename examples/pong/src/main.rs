@@ -1,4 +1,4 @@
-use jot::{context::*, game::*, graphics::*, math::*, window::*};
+use jot::{game::*, graphics::*, math::*, window::*};
 
 fn main() {
     run::<Pong>();
@@ -11,15 +11,15 @@ impl Game for Pong {
         WindowAttributes::default().with_title("Pong")
     }
 
-    fn new(_ctx: &Context) -> Self {
+    fn new(_ctx: &GPUContext) -> Self {
         Self {}
     }
 
-    fn update(&mut self, _delta_time: f64, _ctx: &Context) -> GameFlow {
+    fn update(&mut self, _delta_time: f64, _ctx: &GPUContext) -> GameFlow {
         GameFlow::Continue
     }
 
-    fn draw(&mut self, output: &jot::graphics::TextureView, ctx: &Context) {
+    fn draw(&mut self, output: &TextureView, ctx: &GPUContext) {
         clear(vec4(1.0, 0.0, 0.0, 0.0), output, ctx);
     }
 }

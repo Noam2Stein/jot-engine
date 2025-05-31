@@ -10,16 +10,17 @@ pub fn run<A: Game>() {
     event_loop.run_app(&mut game_runner).unwrap();
 }
 
-enum AppRunner<'a, A: Game> {
+enum AppRunner<'window, A: Game> {
     Uninit,
-    Init(InitAppRunner<'a, A>),
+    Init(InitAppRunner<'window, A>),
     Exited,
 }
-struct InitAppRunner<'a, A: Game> {
+struct InitAppRunner<'window, A: Game> {
     app: A,
-    ctx: Context,
-    surface: Surface<'a>,
+    window: Arc<Window>,
+    surface: Surface<'window>,
     surface_config: SurfaceConfiguration,
+    ctx: GPUContext,
     input: InputProvider,
     fs_switch: FullscreenSwitch,
     instant: Instant,
@@ -49,7 +50,7 @@ impl<'a, A: Game> ApplicationHandler for AppRunner<'a, A> {
                     .event(&GameEvent::Input(input_event), &runner.ctx)
                 {
                     GameFlow::Continue => {
-                        runner.ctx.window.request_redraw();
+                        runner.window.request_redraw();
                     }
                     GameFlow::Exit => {
                         drop(input_events);
@@ -70,7 +71,7 @@ impl<'a, A: Game> ApplicationHandler for AppRunner<'a, A> {
 
         match runner.app.update(delta_time, &runner.ctx) {
             GameFlow::Continue => {
-                runner.ctx.window.request_redraw();
+                runner.window.request_redraw();
             }
             GameFlow::Exit => {
                 event_loop.exit();
@@ -100,7 +101,7 @@ impl<'a, A: Game> ApplicationHandler for AppRunner<'a, A> {
                     .event(&GameEvent::Input(input_event), &runner.ctx)
                 {
                     GameFlow::Continue => {
-                        runner.ctx.window.request_redraw();
+                        runner.window.request_redraw();
                     }
                     GameFlow::Exit => {
                         drop(input_events);
@@ -112,7 +113,7 @@ impl<'a, A: Game> ApplicationHandler for AppRunner<'a, A> {
             }
         }
 
-        runner.fs_switch.event(&window_event, &runner.ctx);
+        runner.fs_switch.event(&window_event, &runner.window);
 
         let event = match window_event {
             WindowEvent::RedrawRequested => {
@@ -169,6 +170,7 @@ impl<'a, A: Game> InitAppRunner<'a, A> {
         let window = Arc::new(window);
         let queue = Arc::new(queue);
         let device = Arc::new(device);
+        let ctx = GPUContext { device, queue };
 
         let surface = gpu
             .create_surface(unsafe { transmute::<&Window, &Window>(&window) })
@@ -184,14 +186,7 @@ impl<'a, A: Game> InitAppRunner<'a, A> {
 
         surface_config.present_mode = PresentMode::AutoNoVsync;
 
-        surface.configure(&device, &surface_config);
-
-        let ctx = Context {
-            device,
-            queue,
-            window,
-            surface_format: surface_config.format,
-        };
+        surface.configure(&ctx.device, &surface_config);
 
         let input = InputProvider::new();
         let fs_switch = FullscreenSwitch::new();
@@ -208,6 +203,7 @@ impl<'a, A: Game> InitAppRunner<'a, A> {
             input,
             fs_switch,
             instant,
+            window,
         }
     }
 }

@@ -4,7 +4,6 @@ name    = "jot"
 version = "0.1.0"
 
 [dependencies]
-jot_context  = { path = "../jot_context", optional = true }
 jot_game     = { path = "../jot_game", optional = true }
 jot_graphics = { path = "../jot_graphics", optional = true }
 jot_input    = { path = "../jot_input", optional = true }
@@ -12,9 +11,8 @@ jot_math     = { path = "../jot_math", optional = true }
 jot_window   = { path = "../jot_window", optional = true }
 
 [features]
-context  = [ "jot_context" ]
-game     = [ "context", "graphics", "input", "jot_game", "math", "window" ]
-graphics = [ "context", "jot_graphics", "math" ]
+game     = [ "graphics", "input", "jot_game", "math", "window" ]
+graphics = [ "jot_graphics", "math" ]
 input    = [ "jot_input", "math" ]
 math     = [ "jot_math" ]
-window   = [ "context", "input", "jot_window", "math" ]
+window   = [ "input", "jot_window", "math" ]

@@ -1,6 +1,3 @@
-#[cfg(feature = "context")]
-pub use jot_context as context;
-
 #[cfg(feature = "game")]
 pub use jot_game as game;
 

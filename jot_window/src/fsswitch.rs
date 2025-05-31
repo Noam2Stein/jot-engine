@@ -14,18 +14,21 @@ impl FullscreenSwitch {
         Self { alt_is_held: false }
     }
 
-    pub fn event(&mut self, event: impl TryInto<FullscreenSwitchEvent, Error = ()>, ctx: &Context) {
+    pub fn event(
+        &mut self,
+        event: impl TryInto<FullscreenSwitchEvent, Error = ()>,
+        window: &Window,
+    ) {
         match event.try_into() {
             Ok(FullscreenSwitchEvent::Alt(alt_is_pressed)) => self.alt_is_held = alt_is_pressed,
             Ok(FullscreenSwitchEvent::Enter) => {
                 if self.alt_is_held {
-                    match ctx.window.fullscreen() {
+                    match window.fullscreen() {
                         Some(_) => {
-                            ctx.window.set_fullscreen(None);
+                            window.set_fullscreen(None);
                         }
                         None => {
-                            ctx.window
-                                .set_fullscreen(Some(Fullscreen::Borderless(None)));
+                            window.set_fullscreen(Some(Fullscreen::Borderless(None)));
                         }
                     }
                 }
