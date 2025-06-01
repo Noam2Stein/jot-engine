@@ -1,0 +1,8 @@
+[package]
+edition = "2024"
+name    = "jot_shader"
+version = "0.1.0"
+
+[dependencies]
+jot_graphics = { path = "../jot_graphics" }
+jot_math     = { path = "../jot_math" }

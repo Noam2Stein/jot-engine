@@ -8,6 +8,7 @@ jot_game     = { path = "../jot_game", optional = true }
 jot_graphics = { path = "../jot_graphics", optional = true }
 jot_input    = { path = "../jot_input", optional = true }
 jot_math     = { path = "../jot_math", optional = true }
+jot_shader   = { path = "../jot_shader", optional = true }
 jot_window   = { path = "../jot_window", optional = true }
 
 [features]
@@ -15,4 +16,5 @@ game     = [ "graphics", "input", "jot_game", "math", "window" ]
 graphics = [ "jot_graphics", "math" ]
 input    = [ "jot_input", "math" ]
 math     = [ "jot_math" ]
+shader   = [ "graphics", "jot_shader", "math" ]
 window   = [ "input", "jot_window", "math" ]

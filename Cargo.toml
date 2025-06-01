@@ -1,11 +1,14 @@
 [workspace]
 
-members = [ "examples/game",
+members = [
+    "examples/game",
     "examples/pong",
+    "examples/shader",
     "jot",
     "jot_game",
     "jot_graphics",
     "jot_input",
     "jot_math",
+    "jot_shader",
     "jot_window",
 ]
