@@ -14,6 +14,5 @@ modules! {
     graphics,
     input,
     math,
-    shader,
     window,
 }
