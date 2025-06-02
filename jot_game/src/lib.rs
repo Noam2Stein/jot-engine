@@ -24,7 +24,7 @@ pub trait Game {
     }
 
     fn draw(&mut self, output: &TextureView, ctx: &GPUContext) {
-        clear(vec4(0.0, 0.0, 0.0, 0.0), output, ctx);
+        clear(fvec4(0.0, 0.0, 0.0, 0.0), output, ctx);
     }
 }
 

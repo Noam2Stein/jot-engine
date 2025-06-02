@@ -1,5 +1,4 @@
 use jot_input::*;
-use jot_math::*;
 
 mod fsswitch;
 pub use fsswitch::*;

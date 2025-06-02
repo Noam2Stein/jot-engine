@@ -77,14 +77,14 @@ impl SVec2 {
     pub const fn from_i64(value: I64Vec2) -> Self {
         svec2(s32::from_i64(value.x), s32::from_i64(value.y))
     }
-    pub const fn from_f32(value: Vec2) -> Self {
+    pub const fn from_f32(value: FVec2) -> Self {
         svec2(s32::from_f32(value.x), s32::from_f32(value.y))
     }
     pub const fn from_f64(value: DVec2) -> Self {
         svec2(s32::from_f64(value.x), s32::from_f64(value.y))
     }
-    pub const fn as_f32(self) -> Vec2 {
-        vec2(self.x.as_f32(), self.y.as_f32())
+    pub const fn as_f32(self) -> FVec2 {
+        fvec2(self.x.as_f32(), self.y.as_f32())
     }
     pub const fn as_f64(self) -> DVec2 {
         dvec2(self.x.as_f64(), self.y.as_f64())

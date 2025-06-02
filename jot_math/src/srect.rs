@@ -17,14 +17,14 @@ impl SRect {
         }
     }
 
-    pub const fn from_f32(value: Rect) -> Self {
+    pub const fn from_f32(value: FRect) -> Self {
         Self {
             center: SVec2::from_f32(value.center),
             extents: SVec2::from_f32(value.extents),
         }
     }
-    pub const fn as_f32(self) -> Rect {
-        Rect {
+    pub const fn as_f32(self) -> FRect {
+        FRect {
             center: self.center.as_f32(),
             extents: self.extents.as_f32(),
         }

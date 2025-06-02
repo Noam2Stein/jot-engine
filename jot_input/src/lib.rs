@@ -157,8 +157,8 @@ impl TryFrom<&WindowEvent> for InputEvent {
             } => Ok(InputEvent {
                 device_id: InputDeviceId::Winit(*device_id),
                 event: InputDeviceEvent::Mouse(MouseEvent::Scroll(match delta {
-                    MouseScrollDelta::LineDelta(right, down) => vec2(*right, -*down),
-                    MouseScrollDelta::PixelDelta(delta) => vec2(delta.x as f32, -delta.y as f32),
+                    MouseScrollDelta::LineDelta(right, down) => fvec2(*right, -*down),
+                    MouseScrollDelta::PixelDelta(delta) => fvec2(delta.x as f32, -delta.y as f32),
                 })),
             }),
             WindowEvent::CursorMoved {
@@ -166,7 +166,7 @@ impl TryFrom<&WindowEvent> for InputEvent {
                 position,
             } => Ok(InputEvent {
                 device_id: InputDeviceId::Winit(*device_id),
-                event: InputDeviceEvent::Mouse(MouseEvent::Move(vec2(
+                event: InputDeviceEvent::Mouse(MouseEvent::Move(fvec2(
                     position.x as f32,
                     position.y as f32,
                 ))),

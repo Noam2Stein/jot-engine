@@ -20,6 +20,6 @@ impl Game for Pong {
     }
 
     fn draw(&mut self, output: &TextureView, ctx: &GPUContext) {
-        clear(vec4(1.0, 0.0, 0.0, 0.0), output, ctx);
+        clear(fvec4(1.0, 0.0, 0.0, 0.0), output, ctx);
     }
 }
