@@ -1,4 +1,4 @@
-use jot_graphics::*;
+use jot_gpu::*;
 use jot_input::*;
 use jot_math::*;
 use jot_window::*;
@@ -23,7 +23,7 @@ pub trait Game {
         event.into()
     }
 
-    fn draw(&mut self, output: &TextureView, ctx: &GPUContext) {
+    fn draw(&mut self, output: &GPUTextureView, ctx: &GPUContext) {
         clear(fvec4(0.0, 0.0, 0.0, 0.0), output, ctx);
     }
 }

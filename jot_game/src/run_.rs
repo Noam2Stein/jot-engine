@@ -18,8 +18,8 @@ enum AppRunner<'window, A: Game> {
 struct InitAppRunner<'window, A: Game> {
     app: A,
     window: Arc<Window>,
-    surface: Surface<'window>,
-    surface_config: SurfaceConfiguration,
+    surface: GPUSurface<'window>,
+    surface_config: GPUSurfaceConfig,
     ctx: GPUContext,
     input: InputProvider,
     fs_switch: FullscreenSwitch,
@@ -159,11 +159,11 @@ impl<'a, A: Game> InitAppRunner<'a, A> {
         let window = event_loop.create_window(A::window_attrs()).unwrap();
 
         let gpu = GPU::default();
-        let adapter_options = RequestAdapterOptions::default();
+        let adapter_options = GPURequestAdapterOptions::default();
         let adapter = pollster::block_on(gpu.request_adapter(&adapter_options))
             .expect("adapter request failed");
 
-        let device_desc = GPUDeviceDescriptor::default();
+        let device_desc = GPUDeviceDesc::default();
         let (device, queue) =
             pollster::block_on(adapter.request_device(&device_desc, None)).unwrap();
 
@@ -184,7 +184,7 @@ impl<'a, A: Game> InitAppRunner<'a, A> {
             )
             .unwrap();
 
-        surface_config.present_mode = PresentMode::AutoNoVsync;
+        surface_config.present_mode = GPUPresentMode::AutoNoVsync;
 
         surface.configure(&ctx.device, &surface_config);
 

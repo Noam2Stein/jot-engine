@@ -1,4 +1,4 @@
-use jot::{game::*, graphics::*, math::*, window::*};
+use jot::{game::*, gpu::*, math::*, window::*};
 
 fn main() {
     run::<Pong>();
@@ -19,7 +19,7 @@ impl Game for Pong {
         GameFlow::Continue
     }
 
-    fn draw(&mut self, output: &TextureView, ctx: &GPUContext) {
+    fn draw(&mut self, output: &GPUTextureView, ctx: &GPUContext) {
         clear(fvec4(1.0, 0.0, 0.0, 0.0), output, ctx);
     }
 }

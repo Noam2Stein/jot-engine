@@ -5,7 +5,7 @@ members = [
     "examples/pong",
     "jot",
     "jot_game",
-    "jot_graphics",
+    "jot_gpu",
     "jot_input",
     "jot_math",
     "jot_window",

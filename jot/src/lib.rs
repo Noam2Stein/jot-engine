@@ -11,7 +11,7 @@ macro_rules! modules {
 
 modules! {
     game,
-    graphics,
+    gpu,
     input,
     math,
     window,
