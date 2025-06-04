@@ -26,6 +26,7 @@ pub use wgpu::{
     TextureDimension as GPUTextureDimension, TextureFormat as GPUTextureFormat,
     TextureUsages as GPUTextureUsages, TextureView as GPUTextureView,
     TextureViewDescriptor as GPUTextureViewDesc, VertexBufferLayout as GPUVertexBufferLayout,
+    vertex_attr_array as gpu_vertex_attrs,
 };
 
 mod clear;
