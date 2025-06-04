@@ -30,8 +30,9 @@ pub use wgpu::{
     TextureDimension as GPUTextureDimension, TextureFormat as GPUTextureFormat,
     TextureSampleType as GPUTextureSampleType, TextureUsages as GPUTextureUsages,
     TextureView as GPUTextureView, TextureViewDescriptor as GPUTextureViewDesc,
-    TextureViewDimension as GPUTextureViewDimension, VertexBufferLayout as GPUVertexBufferLayout,
-    vertex_attr_array as gpu_vertex_attrs,
+    TextureViewDimension as GPUTextureViewDimension, VertexAttribute as GPUVertexAttribute,
+    VertexBufferLayout as GPUVertexBufferLayout, VertexFormat as GPUVertexFormat,
+    VertexStepMode as GPUVertexStepMode, vertex_attr_array as gpu_vertex_attrs,
 };
 
 mod clear;
