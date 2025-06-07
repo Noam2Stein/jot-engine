@@ -12,7 +12,7 @@ jot_window = { path = "../jot_window", optional = true }
 paste      = "1.0.15"
 
 [features]
-game   = [ "gpu", "input", "jot_game", "math", "window" ]
+game   = [ "gpu", "input", "jot_game", "math" ]
 gpu    = [ "jot_gpu", "math" ]
 input  = [ "jot_input", "math" ]
 math   = [ "jot_math" ]

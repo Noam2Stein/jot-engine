@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use jot_gpu::*;
 use jot_input::*;
 use jot_math::*;
@@ -9,22 +11,20 @@ pub use event::*;
 pub use run_::*;
 
 pub trait Game {
-    fn window_attrs() -> WindowAttributes {
-        WindowAttributes::default().with_title("Jot Game Window")
-    }
+    const NAME: &str;
 
-    fn new(_ctx: &GPUContext) -> Self;
+    fn new(_gpu: &Arc<GPU>) -> Self;
 
-    fn update(&mut self, _delta_time: f64, _ctx: &GPUContext) -> GameFlow {
+    fn update(&mut self, _delta_time: f64, _gpu: &Arc<GPU>) -> GameFlow {
         GameFlow::Continue
     }
 
-    fn event(&mut self, event: &GameEvent, _ctx: &GPUContext) -> GameFlow {
+    fn event(&mut self, event: &GameEvent, _gpu: &Arc<GPU>) -> GameFlow {
         event.into()
     }
 
-    fn draw(&mut self, output: &GPUTextureView, ctx: &GPUContext) {
-        clear(fvec4(0.0, 0.0, 0.0, 0.0), output, ctx);
+    fn draw(&self, output: &GPUTextureView, gpu: &Arc<GPU>) {
+        gpu.clear(output, fvec4(0.0, 0.0, 0.0, 0.0));
     }
 }
 
