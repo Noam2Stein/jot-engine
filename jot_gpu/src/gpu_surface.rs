@@ -1,4 +1,7 @@
-use std::sync::{Arc, RwLock};
+use std::{
+    mem::take,
+    sync::{Arc, RwLock},
+};
 
 use super::*;
 
@@ -13,7 +16,7 @@ pub struct GPUSurfaceTarget<'target> {
 }
 
 pub struct GPUSurfaceFrame {
-    inner: wgpu::SurfaceTexture,
+    inner: Option<wgpu::SurfaceTexture>,
 }
 
 impl GPU {
@@ -50,10 +53,25 @@ impl<'target> GPUSurface<'target> {
         self.inner.configure(&gpu.device, &config);
     }
 
-    pub fn next_frame(&self, gpu: &GPU) {
-        self.inner
-            .get_current_texture()
-            .expect("Failed to get the next surface frame")
+    pub fn next_frame(&mut self) -> GPUSurfaceFrame {
+        GPUSurfaceFrame {
+            inner: Some(
+                self.inner
+                    .get_current_texture()
+                    .expect("Failed to get the next surface frame"),
+            ),
+        }
+    }
+}
+
+impl GPUSurfaceFrame {
+    pub fn texture(&self) -> &GPUTexture {
+        unsafe { std::mem::transmute(&self.inner.as_ref().unwrap().texture) }
+    }
+}
+impl Drop for GPUSurfaceFrame {
+    fn drop(&mut self) {
+        take(&mut self.inner).unwrap().present();
     }
 }
 

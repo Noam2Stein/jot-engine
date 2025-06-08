@@ -7,7 +7,9 @@ fn main() {
 struct EmptyGame {}
 
 impl Game for EmptyGame {
-    fn new(_ctx: &jot::gpu::GPUContext) -> Self {
+    const NAME: &str = "Empty Game";
+
+    fn new(_gpu: &jot::gpu::GPU) -> Self {
         Self {}
     }
 }

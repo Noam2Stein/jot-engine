@@ -1,10 +1,12 @@
 use super::*;
 
+#[repr(transparent)]
 #[derive(Debug, Clone)]
 pub struct GPUTexture {
     inner: wgpu::Texture,
 }
 
+#[repr(transparent)]
 #[derive(Debug, Clone)]
 pub struct GPUTextureView {
     inner: wgpu::TextureView,
@@ -19,9 +21,23 @@ impl GPU {
             inner: self.device.create_texture(desc),
         }
     }
+}
 
-    pub fn clear(&self, output: &GPUTextureView, color: FVec4) {
-        let mut encoder = self
+impl GPUTexture {
+    pub fn create_view(&self, desc: &GPUTextureViewDesc) -> GPUTextureView {
+        GPUTextureView {
+            inner: self.inner.create_view(desc),
+        }
+    }
+
+    pub fn clear(&self, color: FVec4, gpu: &GPU) {
+        self.create_view(&GPUTextureViewDesc::default())
+            .clear(color, gpu);
+    }
+}
+impl GPUTextureView {
+    pub fn clear(&self, color: FVec4, gpu: &GPU) {
+        let mut encoder = gpu
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Clear Encoder"),
@@ -31,7 +47,7 @@ impl GPU {
             encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("Renderer - Render Pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &output.inner,
+                    view: &self.inner,
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color {
@@ -49,15 +65,7 @@ impl GPU {
             });
         }
 
-        self.queue.submit(std::iter::once(encoder.finish()));
-    }
-}
-
-impl GPUTexture {
-    pub fn create_view(&self, desc: &GPUTextureViewDesc) -> GPUTextureView {
-        GPUTextureView {
-            inner: self.inner.create_view(desc),
-        }
+        gpu.queue.submit(std::iter::once(encoder.finish()));
     }
 }
 

@@ -1,4 +1,4 @@
-use jot::{game::*, gpu::*, math::*, window::*};
+use jot::{game::*, gpu::*, math::*};
 
 fn main() {
     run::<Pong>();
@@ -7,19 +7,17 @@ fn main() {
 struct Pong {}
 
 impl Game for Pong {
-    fn window_attrs() -> WindowAttributes {
-        WindowAttributes::default().with_title("Pong")
-    }
+    const NAME: &str = "Pong";
 
-    fn new(_ctx: &GPUContext) -> Self {
+    fn new(_gpu: &GPU) -> Self {
         Self {}
     }
 
-    fn update(&mut self, _delta_time: f64, _ctx: &GPUContext) -> GameFlow {
+    fn update(&mut self, _delta_time: f64, _gpu: &GPU) -> GameFlow {
         GameFlow::Continue
     }
 
-    fn draw(&mut self, output: &GPUTextureView, ctx: &GPUContext) {
-        clear(fvec4(1.0, 0.0, 0.0, 0.0), output, ctx);
+    fn draw(&self, output: &GPUTextureView, gpu: &GPU) {
+        output.clear(fvec4(0.0, 1.0, 1.0, 0.0), gpu);
     }
 }

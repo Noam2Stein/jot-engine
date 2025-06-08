@@ -17,7 +17,7 @@ enum GameRunner<G: Game> {
 }
 struct InitGameRunner<G: Game> {
     game: G,
-    gpu: Arc<GPU>,
+    gpu: GPU,
     window: Arc<Window>,
     fs_switch: FullscreenSwitch,
     surface: GPUSurface<'static>,
@@ -116,23 +116,20 @@ impl<G: Game> ApplicationHandler for GameRunner<G> {
 
         let event = match window_event {
             WindowEvent::RedrawRequested => {
-                if let Ok(frame) = runner.surface.get_current_texture() {
-                    runner
-                        .game
-                        .draw(&frame.texture.create_view(&Default::default()), &runner.ctx);
+                let frame = runner.surface.next_frame();
 
-                    frame.present();
-                };
+                runner.game.draw(
+                    &frame.texture().create_view(&Default::default()),
+                    &runner.gpu,
+                );
 
                 None
             }
             WindowEvent::Resized(size) => {
                 if size.width > 0 && size.height > 0 {
-                    runner.surface_config.width = size.width;
-                    runner.surface_config.height = size.height;
                     runner
                         .surface
-                        .configure(&runner.ctx.device, &runner.surface_config);
+                        .resize(uvec2(size.width, size.height), &runner.gpu);
                 }
 
                 None
@@ -142,7 +139,7 @@ impl<G: Game> ApplicationHandler for GameRunner<G> {
         };
 
         if let Some(event) = event {
-            match runner.game.event(&event, &runner.ctx) {
+            match runner.game.event(&event, &runner.gpu) {
                 GameFlow::Continue => {}
                 GameFlow::Exit => {
                     event_loop.exit();
@@ -153,7 +150,7 @@ impl<G: Game> ApplicationHandler for GameRunner<G> {
     }
 }
 
-impl<'a, G: Game> InitGameRunner<'a, G> {
+impl<G: Game> InitGameRunner<G> {
     fn new(event_loop: &ActiveEventLoop) -> Self {
         let window = event_loop
             .create_window(WindowAttributes::default().with_title(G::NAME))
@@ -162,32 +159,19 @@ impl<'a, G: Game> InitGameRunner<'a, G> {
         let window = Arc::new(window);
         let gpu = GPU::any();
 
-        let surface = gpu.create_surface(window);
-
-        let mut surface_config = surface
-            .get_default_config(
-                &adapter,
-                window.inner_size().width,
-                window.inner_size().height,
-            )
-            .unwrap();
-
-        surface_config.present_mode = GPUPresentMode::AutoNoVsync;
-
-        surface.configure(&ctx.device, &surface_config);
+        let surface = gpu.create_surface(window.clone());
 
         let input = InputProvider::new();
         let fs_switch = FullscreenSwitch::new();
 
-        let app = G::new(&ctx);
+        let app = G::new(&gpu);
 
         let instant = Instant::now();
 
         Self {
             game: app,
-            ctx,
+            gpu,
             surface,
-            surface_config,
             input,
             fs_switch,
             instant,
