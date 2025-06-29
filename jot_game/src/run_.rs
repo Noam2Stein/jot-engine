@@ -17,10 +17,10 @@ enum GameRunner<G: Game> {
 }
 struct InitGameRunner<G: Game> {
     game: G,
-    gpu: GPU,
+    gpu: Gpu,
     window: Arc<Window>,
     fs_switch: FullscreenSwitch,
-    surface: GPUSurface<'static>,
+    surface: GpuSurface<'static>,
     input: InputProvider,
     instant: Instant,
 }
@@ -157,7 +157,7 @@ impl<G: Game> InitGameRunner<G> {
             .unwrap();
 
         let window = Arc::new(window);
-        let gpu = GPU::any();
+        let gpu = Gpu::any();
 
         let surface = gpu.create_surface(window.clone());
 

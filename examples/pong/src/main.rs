@@ -9,15 +9,15 @@ struct Pong {}
 impl Game for Pong {
     const NAME: &str = "Pong";
 
-    fn new(_gpu: &GPU) -> Self {
+    fn new(_gpu: &Gpu) -> Self {
         Self {}
     }
 
-    fn update(&mut self, _delta_time: f64, _gpu: &GPU) -> GameFlow {
+    fn update(&mut self, _delta_time: f64, _gpu: &Gpu) -> GameFlow {
         GameFlow::Continue
     }
 
-    fn draw(&self, output: &GPUTextureView, gpu: &GPU) {
+    fn draw(&self, output: &GpuTexture2DView, gpu: &Gpu) {
         output.clear(fvec4(0.0, 1.0, 1.0, 0.0), gpu);
     }
 }

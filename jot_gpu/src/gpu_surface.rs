@@ -1,30 +1,33 @@
 use std::{
+    marker::PhantomData,
     mem::take,
     sync::{Arc, RwLock},
 };
 
 use super::*;
 
-pub struct GPUSurface<'target> {
+pub struct GpuSurface<'target> {
     inner: wgpu::Surface<'target>,
     config: RwLock<wgpu::SurfaceConfiguration>,
 }
 
-pub struct GPUSurfaceTarget<'target> {
+pub struct GpuSurfaceTarget<'target> {
     inner: wgpu::SurfaceTarget<'target>,
     size: UVec2,
 }
 
-pub struct GPUSurfaceFrame {
+pub struct GpuSurfaceFrame<'f> {
+    f: PhantomData<&'f ()>,
     inner: Option<wgpu::SurfaceTexture>,
+    texture: GpuTexture2D<f32>,
 }
 
-impl GPU {
+impl Gpu {
     pub fn create_surface<'target>(
         &self,
-        target: impl Into<GPUSurfaceTarget<'target>>,
-    ) -> GPUSurface<'target> {
-        let target: GPUSurfaceTarget = target.into();
+        target: impl Into<GpuSurfaceTarget<'target>>,
+    ) -> GpuSurface<'target> {
+        let target: GpuSurfaceTarget = target.into();
 
         let surface = self
             .instance
@@ -37,14 +40,14 @@ impl GPU {
 
         surface.configure(&self.device, &config);
 
-        GPUSurface {
+        GpuSurface {
             inner: surface,
             config: RwLock::new(config),
         }
     }
 }
-impl<'target> GPUSurface<'target> {
-    pub fn resize(&self, size: UVec2, gpu: &GPU) {
+impl<'target> GpuSurface<'target> {
+    pub fn resize(&self, size: UVec2, gpu: &Gpu) {
         let mut config = self.config.write().unwrap();
 
         config.width = size.x;
@@ -53,39 +56,48 @@ impl<'target> GPUSurface<'target> {
         self.inner.configure(&gpu.device, &config);
     }
 
-    pub fn next_frame(&mut self) -> GPUSurfaceFrame {
-        GPUSurfaceFrame {
-            inner: Some(
-                self.inner
-                    .get_current_texture()
-                    .expect("Failed to get the next surface frame"),
-            ),
+    pub fn next_frame(&mut self) -> GpuSurfaceFrame {
+        let inner = self
+            .inner
+            .get_current_texture()
+            .expect("Failed to get the next surface frame");
+
+        let texture = GpuTexture2D {
+            inner: inner.texture.clone(),
+            inner_view: inner.texture.create_view(&Default::default()),
+            p: PhantomData,
+        };
+
+        GpuSurfaceFrame {
+            f: PhantomData,
+            inner: Some(inner),
+            texture,
         }
     }
 }
 
-impl GPUSurfaceFrame {
-    pub fn texture(&self) -> &GPUTexture {
+impl<'frame> GpuSurfaceFrame<'frame> {
+    pub fn texture(&self) -> &GpuTexture2D<f32> {
         unsafe { std::mem::transmute(&self.inner.as_ref().unwrap().texture) }
     }
 }
-impl Drop for GPUSurfaceFrame {
+impl<'frame> Drop for GpuSurfaceFrame<'frame> {
     fn drop(&mut self) {
         take(&mut self.inner).unwrap().present();
     }
 }
 
-impl Into<GPUSurfaceTarget<'static>> for Arc<Window> {
-    fn into(self) -> GPUSurfaceTarget<'static> {
-        GPUSurfaceTarget {
+impl Into<GpuSurfaceTarget<'static>> for Arc<Window> {
+    fn into(self) -> GpuSurfaceTarget<'static> {
+        GpuSurfaceTarget {
             size: uvec2(self.inner_size().width, self.inner_size().height),
             inner: self.into(),
         }
     }
 }
-impl<'window> Into<GPUSurfaceTarget<'window>> for &'window Window {
-    fn into(self) -> GPUSurfaceTarget<'window> {
-        GPUSurfaceTarget {
+impl<'window> Into<GpuSurfaceTarget<'window>> for &'window Window {
+    fn into(self) -> GpuSurfaceTarget<'window> {
+        GpuSurfaceTarget {
             size: uvec2(self.inner_size().width, self.inner_size().height),
             inner: self.into(),
         }

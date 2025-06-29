@@ -9,7 +9,7 @@ struct EmptyGame {}
 impl Game for EmptyGame {
     const NAME: &str = "Empty Game";
 
-    fn new(_gpu: &jot::gpu::GPU) -> Self {
+    fn new(_gpu: &jot::gpu::Gpu) -> Self {
         Self {}
     }
 }

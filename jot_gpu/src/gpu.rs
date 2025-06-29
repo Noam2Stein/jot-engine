@@ -1,12 +1,12 @@
 #[derive(Debug, Clone)]
-pub struct GPU {
+pub struct Gpu {
     pub(super) instance: wgpu::Instance,
     pub(super) adapter: wgpu::Adapter,
     pub(super) device: wgpu::Device,
     pub(super) queue: wgpu::Queue,
 }
 
-impl GPU {
+impl Gpu {
     pub fn any() -> Self {
         let instance = wgpu::Instance::default();
         let adapter =

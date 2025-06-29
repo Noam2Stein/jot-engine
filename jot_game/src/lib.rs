@@ -11,17 +11,17 @@ pub use run_::*;
 pub trait Game {
     const NAME: &str;
 
-    fn new(_gpu: &GPU) -> Self;
+    fn new(_gpu: &Gpu) -> Self;
 
-    fn update(&mut self, _delta_time: f64, _gpu: &GPU) -> GameFlow {
+    fn update(&mut self, _delta_time: f64, _gpu: &Gpu) -> GameFlow {
         GameFlow::Continue
     }
 
-    fn event(&mut self, event: &GameEvent, _gpu: &GPU) -> GameFlow {
+    fn event(&mut self, event: &GameEvent, _gpu: &Gpu) -> GameFlow {
         event.into()
     }
 
-    fn draw(&self, output: &GPUTextureView, gpu: &GPU) {
+    fn draw(&self, output: &GpuTexture2DView, gpu: &Gpu) {
         output.clear(fvec4(0.0, 0.0, 0.0, 0.0), gpu);
     }
 }
