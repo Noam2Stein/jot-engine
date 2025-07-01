@@ -10,13 +10,10 @@ pub struct GpuBindGroup<B: GpuBindings> {
 pub trait GpuBindings {
     const BINDING_CAP: usize;
 
-    fn push_descs(&self, descs: &mut Vec<GpuBindingDesc>);
+    fn push_descs(&self, descs: &mut Vec<wgpu::BindGroupLayoutEntry>);
 
-    fn push_bindings<'a, 'b>(&'a self, bindings: &'b mut Vec<GpuBinding<'a>>);
+    fn push_bindings<'a, 'b>(&'a self, bindings: &'b mut Vec<wgpu::BindGroupEntry<'a>>);
 }
-
-pub type GpuBindingDesc = wgpu::BindGroupLayoutEntry;
-pub type GpuBinding<'a> = wgpu::BindGroupEntry<'a>;
 
 impl Gpu {
     pub fn create_bind_group<B: GpuBindings>(&self, bindings: B) -> GpuBindGroup<B> {
@@ -48,11 +45,11 @@ impl Gpu {
     }
 }
 
-impl<T> GpuBindings for GpuUniform<T> {
+impl<T: AsStd140> GpuBindings for GpuUniform<T> {
     const BINDING_CAP: usize = 1;
 
-    fn push_descs(&self, descs: &mut Vec<GpuBindingDesc>) {
-        descs.push(GpuBindingDesc {
+    fn push_descs(&self, descs: &mut Vec<wgpu::BindGroupLayoutEntry>) {
+        descs.push(wgpu::BindGroupLayoutEntry {
             visibility: wgpu::ShaderStages::all(),
             ty: wgpu::BindingType::Buffer {
                 ty: wgpu::BufferBindingType::Uniform,
@@ -64,8 +61,8 @@ impl<T> GpuBindings for GpuUniform<T> {
         });
     }
 
-    fn push_bindings<'a, 'b>(&'a self, bindings: &'b mut Vec<GpuBinding<'a>>) {
-        bindings.push(GpuBinding {
+    fn push_bindings<'a, 'b>(&'a self, bindings: &'b mut Vec<wgpu::BindGroupEntry<'a>>) {
+        bindings.push(wgpu::BindGroupEntry {
             binding: bindings.len() as u32,
             resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
                 buffer: &self.inner,
@@ -79,8 +76,8 @@ impl<T> GpuBindings for GpuUniform<T> {
 impl<P: GpuTexturePrim> GpuBindings for GpuTexture2D<P> {
     const BINDING_CAP: usize = 1;
 
-    fn push_descs(&self, descs: &mut Vec<GpuBindingDesc>) {
-        descs.push(GpuBindingDesc {
+    fn push_descs(&self, descs: &mut Vec<wgpu::BindGroupLayoutEntry>) {
+        descs.push(wgpu::BindGroupLayoutEntry {
             visibility: wgpu::ShaderStages::all(),
             ty: wgpu::BindingType::Texture {
                 sample_type: P::SAMPLE_TYPE,
@@ -92,8 +89,8 @@ impl<P: GpuTexturePrim> GpuBindings for GpuTexture2D<P> {
         });
     }
 
-    fn push_bindings<'a, 'b>(&'a self, bindings: &'b mut Vec<GpuBinding<'a>>) {
-        bindings.push(GpuBinding {
+    fn push_bindings<'a, 'b>(&'a self, bindings: &'b mut Vec<wgpu::BindGroupEntry<'a>>) {
+        bindings.push(wgpu::BindGroupEntry {
             binding: bindings.len() as u32,
             resource: wgpu::BindingResource::TextureView(&self.inner_view),
         });

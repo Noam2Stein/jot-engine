@@ -21,7 +21,7 @@ pub trait Game {
         event.into()
     }
 
-    fn draw(&self, output: &GpuTexture2DView, gpu: &Gpu) {
+    fn draw(&self, output: &GpuTexture2D<f32>, gpu: &Gpu) {
         output.clear(fvec4(0.0, 0.0, 0.0, 0.0), gpu);
     }
 }

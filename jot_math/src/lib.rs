@@ -6,11 +6,13 @@ pub use glam::{
     vec3 as fvec3, vec3a as fvec3a, vec4 as fvec4,
 };
 
-pub mod directions;
-pub use directions::*;
+mod constants;
+pub use constants::*;
 
-pub mod frect;
-pub use frect::*;
+pub mod bounds;
+pub mod directions;
+pub use bounds::*;
+pub use directions::*;
 
 pub mod s32_;
 pub mod srect;

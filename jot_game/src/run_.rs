@@ -118,10 +118,7 @@ impl<G: Game> ApplicationHandler for GameRunner<G> {
             WindowEvent::RedrawRequested => {
                 let frame = runner.surface.next_frame();
 
-                runner.game.draw(
-                    &frame.texture().create_view(&Default::default()),
-                    &runner.gpu,
-                );
+                runner.game.draw(&frame.texture(), &runner.gpu);
 
                 None
             }

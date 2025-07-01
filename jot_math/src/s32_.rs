@@ -1,6 +1,6 @@
 use std::{
     fmt::{Debug, Display},
-    ops::{Div, DivAssign, Mul, MulAssign, Shl, Shr},
+    ops::{Div, DivAssign, Mul, MulAssign},
 };
 
 use derive_more::{Add, AddAssign, Neg, Sub, SubAssign};
@@ -89,6 +89,22 @@ impl s32 {
         Self(value << (Self::FRACT_BITS - 4))
     }
 
+    pub const fn neg(self) -> Self {
+        Self(-self.0)
+    }
+    pub const fn add(self, rhs: Self) -> Self {
+        Self(self.0 + rhs.0)
+    }
+    pub const fn sub(self, rhs: Self) -> Self {
+        Self(self.0 - rhs.0)
+    }
+    pub const fn mul(self, rhs: Self) -> Self {
+        Self((((self.0 as i64) * rhs.0 as i64) >> Self::FRACT_BITS) as i32)
+    }
+    pub const fn div(self, rhs: Self) -> Self {
+        Self((((self.0 as i64) << Self::FRACT_BITS) / rhs.0 as i64) as i32)
+    }
+
     pub const fn min(self, other: Self) -> Self {
         if self.0 < other.0 { self } else { other }
     }
@@ -162,7 +178,7 @@ impl Mul for s32 {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        Self((self.0 as i64).mul(rhs.0 as i64).shr(Self::FRACT_BITS) as i32)
+        self.mul(rhs)
     }
 }
 impl MulAssign for s32 {
@@ -174,7 +190,7 @@ impl Div for s32 {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
-        Self((self.0 as i64).shl(Self::FRACT_BITS).div(rhs.0 as i64) as i32)
+        self.div(rhs)
     }
 }
 impl DivAssign for s32 {
