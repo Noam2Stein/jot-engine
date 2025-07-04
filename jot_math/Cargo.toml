@@ -5,6 +5,6 @@ version = "0.1.0"
 
 [dependencies]
 derive_more = { version = "2.0.1", features = [ "full" ] }
-glam        = { version = "0.30.2", features = [ "serde" ] }
+ggmath      = { version = "0.7.0", features = [ "full" ] }
 paste       = "1.0.15"
 seq-macro   = "0.3.6"

@@ -111,7 +111,7 @@ impl<P: GpuTexturePrim> GpuTexture2D<P> {
         gpu.queue.submit(std::iter::once(encoder.finish()));
     }
 
-    pub fn mutate(&self, aspect: GpuTextureAspect, data: &[P], gpu: &Gpu) {
+    pub fn mutate(&self, rect: Option, aspect: GpuTextureAspect, data: &[P], gpu: &Gpu) {
         gpu.queue.write_texture(
             wgpu::TexelCopyTextureInfo {
                 texture: &self.inner,

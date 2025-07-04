@@ -5,6 +5,15 @@ use std::{
 
 use derive_more::{Add, AddAssign, Neg, Sub, SubAssign};
 
+use super::*;
+
+mod mat;
+mod rect;
+mod vec;
+pub use mat::*;
+pub use rect::*;
+pub use vec::*;
+
 /// Fixed-point number with 32 bits, and 8 fractional bits.
 #[allow(non_camel_case_types)]
 #[derive(
@@ -31,6 +40,9 @@ impl s32 {
     pub const NEG_EPSILON: Self = Self(-1);
     pub const HALF: Self = Self(1 << (Self::FRACT_BITS - 1));
     pub const NEG_HALF: Self = Self(-1 << (Self::FRACT_BITS - 1));
+
+    pub const MIN: Self = Self(i32::MIN);
+    pub const MAX: Self = Self(i32::MAX);
 
     pub const fn from_u8(value: u8) -> Self {
         Self::int(value as i32)
