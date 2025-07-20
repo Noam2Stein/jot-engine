@@ -8,7 +8,10 @@ impl Scalar for s32 {
     type Vec4Alignment = <i32 as Scalar>::Vec4Alignment;
 }
 
-pub trait S32VectorExt {
+pub trait S32VectorExt<const N: usize>
+where
+    MaybeVecLen<N>: VecLen,
+{
     const ZERO: Self;
     const ONE: Self;
     const NEG_ONE: Self;
@@ -19,14 +22,24 @@ pub trait S32VectorExt {
     const MIN: Self;
     const MAX: Self;
 
+    fn min(self, other: Vector<N, s32, impl VecAlignment>) -> Self;
+    fn max(self, other: Vector<N, s32, impl VecAlignment>) -> Self;
+    fn clamp(
+        self,
+        min: Vector<N, s32, impl VecAlignment>,
+        max: Vector<N, s32, impl VecAlignment>,
+    ) -> Self;
+
     fn round(self) -> Self;
     fn floor(self) -> Self;
     fn ceil(self) -> Self;
     fn trunc(self) -> Self;
     fn atrunc(self) -> Self;
+
+    fn abs(self) -> Self;
 }
 
-impl<const N: usize, A: VecAlignment> S32VectorExt for Vector<N, s32, A>
+impl<const N: usize, A: VecAlignment> S32VectorExt<N> for Vector<N, s32, A>
 where
     MaybeVecLen<N>: VecLen,
 {
@@ -39,6 +52,20 @@ where
 
     const MIN: Self = Vector::splat(s32::MIN);
     const MAX: Self = Vector::splat(s32::MAX);
+
+    fn min(self, other: Vector<N, s32, impl VecAlignment>) -> Self {
+        self.map_rhs(other, s32::min)
+    }
+    fn max(self, other: Vector<N, s32, impl VecAlignment>) -> Self {
+        self.map_rhs(other, s32::max)
+    }
+    fn clamp(
+        self,
+        min: Vector<N, s32, impl VecAlignment>,
+        max: Vector<N, s32, impl VecAlignment>,
+    ) -> Self {
+        self.min(max).max(min)
+    }
 
     fn round(self) -> Self {
         self.map(s32::round)
@@ -54,5 +81,9 @@ where
     }
     fn atrunc(self) -> Self {
         self.map(s32::atrunc)
+    }
+
+    fn abs(self) -> Self {
+        self.map(s32::abs)
     }
 }

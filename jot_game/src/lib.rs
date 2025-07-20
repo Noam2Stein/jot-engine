@@ -11,6 +11,10 @@ pub use run_::*;
 pub trait Game {
     const NAME: &str;
 
+    fn surface_desc() -> GpuSurfaceDesc {
+        Default::default()
+    }
+
     fn new(_gpu: &Gpu) -> Self;
 
     fn update(&mut self, _delta_time: f64, _gpu: &Gpu) -> GameFlow {
@@ -21,8 +25,8 @@ pub trait Game {
         event.into()
     }
 
-    fn draw(&self, output: &GpuTexture2D<f32>, gpu: &Gpu) {
-        output.clear(fvec4(0.0, 0.0, 0.0, 0.0), gpu);
+    fn draw(&self, output: &GpuTexture<2>, gpu: &Gpu) {
+        output.clear(Some(vec4!(0.0, 0.0, 0.0, 0.0)), None, gpu);
     }
 }
 

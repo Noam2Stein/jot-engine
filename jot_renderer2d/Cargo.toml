@@ -1,0 +1,11 @@
+[package]
+edition = "2024"
+name    = "jot_renderer2d"
+version = "0.1.0"
+
+[dependencies]
+crevice     = "0.18.0"
+jot_gpu     = { path = "../jot_gpu" }
+jot_math    = { path = "../jot_math" }
+wgpu        = "24.0.1"
+wgsl-inline = "0.2.1"

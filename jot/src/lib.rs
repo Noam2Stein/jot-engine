@@ -15,4 +15,5 @@ modules! {
     input,
     math,
     window,
+    renderer2d,
 }

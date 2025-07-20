@@ -126,7 +126,7 @@ impl<G: Game> ApplicationHandler for GameRunner<G> {
                 if size.width > 0 && size.height > 0 {
                     runner
                         .surface
-                        .resize(uvec2(size.width, size.height), &runner.gpu);
+                        .resize(vec2!(size.width, size.height), &runner.gpu);
                 }
 
                 None
@@ -156,7 +156,7 @@ impl<G: Game> InitGameRunner<G> {
         let window = Arc::new(window);
         let gpu = Gpu::any();
 
-        let surface = gpu.create_surface(window.clone());
+        let surface = gpu.create_surface(window.clone(), &G::surface_desc());
 
         let input = InputProvider::new();
         let fs_switch = FullscreenSwitch::new();

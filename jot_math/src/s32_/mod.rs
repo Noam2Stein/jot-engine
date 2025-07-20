@@ -181,6 +181,10 @@ impl s32 {
         }
     }
 
+    pub const fn abs(self) -> Self {
+        Self(self.0.abs())
+    }
+
     pub const fn move_towards(self, target: Self, max_delta: Self) -> Self {
         target.clamp(Self(self.0 + max_delta.0), Self(self.0 - max_delta.0))
     }

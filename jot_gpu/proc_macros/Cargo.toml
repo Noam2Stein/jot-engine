@@ -8,6 +8,9 @@ version = "0.1.0"
 proc-macro = true
 
 [dependencies]
-proc-macro2 = "1.0.95"
-quote       = "1.0.40"
-syn         = "2.0.104"
+derive-syn-parse = "0.2.0"
+naga             = { version = "25.0.1", features = [ "wgsl-in", "wgsl-out" ] }
+proc-macro2      = "1.0.95"
+quote            = "1.0.40"
+syn              = "2.0.104"
+uuid             = "1.12.0"

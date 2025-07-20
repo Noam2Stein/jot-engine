@@ -4,16 +4,18 @@ name    = "jot"
 version = "0.1.0"
 
 [dependencies]
-jot_game   = { path = "../jot_game", optional = true }
-jot_gpu    = { path = "../jot_gpu", optional = true }
-jot_input  = { path = "../jot_input", optional = true }
-jot_math   = { path = "../jot_math", optional = true }
-jot_window = { path = "../jot_window", optional = true }
-paste      = "1.0.15"
+jot_game       = { path = "../jot_game", optional = true }
+jot_gpu        = { path = "../jot_gpu", optional = true }
+jot_input      = { path = "../jot_input", optional = true }
+jot_math       = { path = "../jot_math", optional = true }
+jot_renderer2d = { path = "../jot_renderer2d", optional = true }
+jot_window     = { path = "../jot_window", optional = true }
+paste          = "1.0.15"
 
 [features]
-game   = [ "gpu", "input", "jot_game", "math" ]
-gpu    = [ "jot_gpu", "math" ]
-input  = [ "jot_input", "math" ]
-math   = [ "jot_math" ]
-window = [ "input", "jot_window" ]
+game       = [ "gpu", "input", "jot_game", "math" ]
+gpu        = [ "jot_gpu", "math" ]
+input      = [ "jot_input", "math" ]
+math       = [ "jot_math" ]
+renderer2d = [ "gpu", "jot_renderer2d" ]
+window     = [ "input", "jot_window" ]

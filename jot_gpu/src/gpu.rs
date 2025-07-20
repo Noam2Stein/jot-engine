@@ -1,9 +1,9 @@
 #[derive(Debug, Clone)]
 pub struct Gpu {
-    pub(super) instance: wgpu::Instance,
-    pub(super) adapter: wgpu::Adapter,
-    pub(super) device: wgpu::Device,
-    pub(super) queue: wgpu::Queue,
+    pub instance: wgpu::Instance,
+    pub adapter: wgpu::Adapter,
+    pub device: wgpu::Device,
+    pub queue: wgpu::Queue,
 }
 
 impl Gpu {

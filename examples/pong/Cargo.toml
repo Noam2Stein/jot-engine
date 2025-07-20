@@ -4,4 +4,4 @@ name    = "pong"
 version = "0.1.0"
 
 [dependencies]
-jot = { path = "../../jot", features = [ "game" ] }
+jot = { path = "../../jot", features = [ "game", "renderer2d" ] }

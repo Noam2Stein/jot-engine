@@ -4,11 +4,12 @@ name    = "jot_gpu"
 version = "0.1.0"
 
 [dependencies]
-bevy_ecs            = "0.15.3"
-crevice             = "0.18.0"
 jot_gpu_proc_macros = { path = "proc_macros" }
 jot_math            = { path = "../jot_math" }
 jot_window          = { path = "../jot_window" }
-pollster            = "0.4.0"
-wgpu                = "24.0.1"
-winit               = "0.30.9"
+
+bevy_ecs = "0.15.3"
+crevice  = "0.18.0"
+pollster = "0.4.0"
+wgpu     = "24.0.1"
+winit    = "0.30.9"
