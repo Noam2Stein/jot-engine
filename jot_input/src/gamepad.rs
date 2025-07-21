@@ -4,6 +4,12 @@ use tinyset::Fits64;
 
 use super::*;
 
+/// Gamepad events are seperated into two categories:
+///
+/// Buttons that can either be on or off, and Values which can smooth from not pressed to fully pressed.
+///
+/// Buttons and values non conflicting, so there are no gamepad keys that are both buttons and values.
+/// For example: `DpadRight` is a value, and so it isn't a button.
 #[derive(Debug, Clone, PartialEq)]
 pub enum GamepadEvent {
     Button {
@@ -12,6 +18,7 @@ pub enum GamepadEvent {
     },
     Value {
         code: ValueCode,
+        /// Values are represented by ints, ranging from `0` to `16`.
         value: u8,
     },
 }

@@ -11,6 +11,8 @@ pub use mouse::*;
 pub use winit::event::ElementState as ButtonState;
 use winit::event::{MouseScrollDelta, WindowEvent};
 
+/// A gloal input event.
+/// Not tied to a specific device.
 pub struct InputEvent {
     pub device_id: InputDeviceId,
     pub event: InputDeviceEvent,
@@ -25,6 +27,8 @@ pub enum InputDeviceEvent {
     Gamepad(GamepadEvent),
 }
 
+/// An input event tied to a specific device.
+/// Doesn't store the `DeviceId`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum InputDeviceId {
     Winit(winit::event::DeviceId),
@@ -92,7 +96,7 @@ impl InputProvider {
                             if let Some(value_code) = ValueCode::from_gilrs(button) {
                                 events![InputDeviceEvent::Gamepad(GamepadEvent::Value {
                                     code: value_code,
-                                    value: (value * 255.0) as u8,
+                                    value: (value * 16.0) as u8,
                                 })]
                             } else {
                                 events![]
@@ -105,11 +109,11 @@ impl InputProvider {
                                 events![
                                     InputDeviceEvent::Gamepad(GamepadEvent::Value {
                                         code: positive_value_code,
-                                        value: (value * 255.0).max(0.0) as u8,
+                                        value: (value * 16.0).max(0.0) as u8,
                                     }),
                                     InputDeviceEvent::Gamepad(GamepadEvent::Value {
                                         code: negative_value_code,
-                                        value: (value * -255.0).max(0.0) as u8,
+                                        value: (value * -16.0).max(0.0) as u8,
                                     })
                                 ]
                             } else {

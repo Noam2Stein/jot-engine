@@ -1,48 +1,12 @@
-use std::{fmt::Debug, hash::Hash};
-
+use jot_collections::*;
 use jot_input::*;
+use jot_math::*;
 
+mod axis;
 mod button;
-mod flat_binding;
+mod input;
 mod value;
-mod value_binding;
+pub use axis::*;
 pub use button::*;
-pub use flat_binding::*;
+pub use input::*;
 pub use value::*;
-pub use value_binding::*;
-
-pub use jot_scheme_proc_macros::{InputBindings, InputState};
-
-pub trait InputState: Debug + Copy + Eq + Hash + Default {
-    type Bindings: InputBindings;
-    type ResolverState: Debug + Clone + Default;
-
-    fn new_resolver(bindings: Self::Bindings) -> Self::ResolverState;
-
-    fn event(resolver: &mut Self::ResolverState, event: &InputDeviceEvent);
-
-    fn step(resolver: &mut Self::ResolverState) -> Self;
-}
-
-pub trait InputBindings: Default {}
-
-#[derive(Debug, Clone, Default)]
-pub struct InputResolver<T: InputState> {
-    state: T::ResolverState,
-}
-
-impl<T: InputState> InputResolver<T> {
-    pub fn new(bindings: T::Bindings) -> Self {
-        Self {
-            state: T::new_resolver(bindings),
-        }
-    }
-
-    pub fn event(&mut self, event: &InputDeviceEvent) {
-        T::event(&mut self.state, event);
-    }
-
-    pub fn step(&mut self) -> T {
-        T::step(&mut self.state)
-    }
-}

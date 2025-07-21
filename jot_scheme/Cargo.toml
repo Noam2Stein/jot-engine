@@ -6,10 +6,6 @@ version = "0.1.0"
 [dependencies]
 jot_scheme_proc_macros = { path = "proc_macros" }
 
-jot_input = { path = "../jot_input" }
-
-bitvec = "1.0.1"
-smallvec = "1.15.1"
-tinyset = { git = "https://github.com/Noam2Stein/tinyset", features = [
-    "winit",
-] }
+jot_collections = { path = "../jot_collections" }
+jot_input       = { path = "../jot_input" }
+jot_math        = { path = "../jot_math" }

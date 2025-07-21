@@ -17,4 +17,6 @@ modules! {
     window,
     renderer2d,
     fixed,
+    scheme,
+    collections,
 }

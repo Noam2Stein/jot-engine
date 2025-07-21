@@ -1,4 +1,4 @@
-use jot::{fixed::*, game::*, gpu::*, math::*, renderer2d::*};
+use jot::{collections::*, fixed::*, game::*, gpu::*, input::*, math::*, renderer2d::*, scheme::*};
 
 fn main() {
     run::<Pong>();
@@ -18,12 +18,14 @@ const FPS: u32 = 120;
 const TIME_STEP: s32 = s32::int(1).div(s32::int(FPS as i32));
 
 const BALL_SPEED: s32 = s32::int(10);
+const PLAYER_SPEED: s32 = s32::int(30);
 
 struct Pong {
     fixed_time: FixedTime<FPS>,
     renderer: Renderer2D<3>,
 
     state: PongState,
+    input: Resolver<PongInput>,
 }
 
 struct PongState {
@@ -33,6 +35,12 @@ struct PongState {
 
     ball: SRect2C,
     ball_velocity: SVec2,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Input)]
+struct PongInput {
+    pub left: Axis,
+    pub right: Axis,
 }
 
 impl Game for Pong {
@@ -66,12 +74,63 @@ impl Game for Pong {
 
             fixed_time: FixedTime::new(),
             renderer: Renderer2D::new(gpu),
+
+            input: Resolver::new(Bindings::<PongInput> {
+                left: Bindings::<Axis> {
+                    positive: Bindings::<Value> {
+                        flat: Bindings::<Button> {
+                            keys: Set64::from_iter([KeyCode::KeyW]),
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    },
+                    negative: Bindings::<Value> {
+                        flat: Bindings::<Button> {
+                            keys: Set64::from_iter([KeyCode::KeyS]),
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    },
+                },
+
+                right: Bindings::<Axis> {
+                    positive: Bindings::<Value> {
+                        flat: Bindings::<Button> {
+                            keys: Set64::from_iter([KeyCode::ArrowUp]),
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    },
+                    negative: Bindings::<Value> {
+                        flat: Bindings::<Button> {
+                            keys: Set64::from_iter([KeyCode::ArrowDown]),
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    },
+                },
+            }),
         }
     }
 
     fn update(&mut self, delta_time: f64, _gpu: &Gpu) -> GameFlow {
         self.fixed_time
-            .update(delta_time, || self.state.fixed_update())
+            .update(delta_time, || self.state.fixed_update(self.input.step()))
+    }
+
+    fn event(&mut self, event: &GameEvent, _gpu: &Gpu) -> GameFlow {
+        match event {
+            GameEvent::Input(InputEvent {
+                device_id: _,
+                event,
+            }) => {
+                self.input.event(event);
+            }
+
+            _ => {}
+        }
+
+        GameFlow::from(event)
     }
 
     fn draw(&self, output: &GpuTexture<2>, gpu: &Gpu) {
@@ -91,10 +150,19 @@ impl Game for Pong {
 }
 
 impl PongState {
-    fn fixed_update(&mut self) -> GameFlow {
+    fn fixed_update(&mut self, input: PongInput) -> GameFlow {
+        self.update_players(input);
         self.update_ball();
 
         GameFlow::Continue
+    }
+
+    fn update_players(&mut self, input: PongInput) {
+        self.left_player
+            .move_y(input.left.as_s32() * PLAYER_SPEED * TIME_STEP);
+
+        self.right_player
+            .move_y(input.right.as_s32() * PLAYER_SPEED * TIME_STEP);
     }
 
     fn update_ball(&mut self) {
