@@ -11,6 +11,8 @@ pub use flat_binding::*;
 pub use value::*;
 pub use value_binding::*;
 
+pub use jot_scheme_proc_macros::{InputBindings, InputState};
+
 pub trait InputState: Debug + Copy + Eq + Hash + Default {
     type Bindings: InputBindings;
     type ResolverState: Debug + Clone + Default;
