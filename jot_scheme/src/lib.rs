@@ -2,13 +2,20 @@ use std::{fmt::Debug, hash::Hash};
 
 use jot_input::*;
 
+mod button;
+mod flat_binding;
+mod value_binding;
+pub use button::*;
+pub use flat_binding::*;
+pub use value_binding::*;
+
 pub trait InputState: Debug + Copy + Eq + Hash + Default {
     type Bindings: InputBindings;
     type ResolverState: Debug + Clone + Default;
 
     fn new_resolver(bindings: Self::Bindings) -> Self::ResolverState;
 
-    fn event(resolver: &mut Self::ResolverState, event: &InputEvent);
+    fn event(resolver: &mut Self::ResolverState, event: &InputDeviceEvent);
 
     fn step(resolver: &mut Self::ResolverState) -> Self;
 }
@@ -27,7 +34,7 @@ impl<T: InputState> InputResolver<T> {
         }
     }
 
-    pub fn event(&mut self, event: &InputEvent) {
+    pub fn event(&mut self, event: &InputDeviceEvent) {
         T::event(&mut self.state, event);
     }
 

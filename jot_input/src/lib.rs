@@ -69,7 +69,7 @@ impl InputProvider {
                         gilrs::EventType::Connected => events![InputDeviceEvent::Connect],
                         gilrs::EventType::Disconnected => events![InputDeviceEvent::Disconnect],
                         gilrs::EventType::ButtonPressed(button, _code) => {
-                            if let Some(button_code) = gilrs_to_button(button) {
+                            if let Some(button_code) = ButtonCode::from_gilrs(button) {
                                 events![InputDeviceEvent::Gamepad(GamepadEvent::Button {
                                     button: button_code,
                                     state: ButtonState::Pressed
@@ -79,7 +79,7 @@ impl InputProvider {
                             }
                         }
                         gilrs::EventType::ButtonReleased(button, _code) => {
-                            if let Some(button_code) = gilrs_to_button(button) {
+                            if let Some(button_code) = ButtonCode::from_gilrs(button) {
                                 events![InputDeviceEvent::Gamepad(GamepadEvent::Button {
                                     button: button_code,
                                     state: ButtonState::Released
@@ -89,7 +89,7 @@ impl InputProvider {
                             }
                         }
                         gilrs::EventType::ButtonChanged(button, value, _code) => {
-                            if let Some(value_code) = gilrs_to_value(button) {
+                            if let Some(value_code) = ValueCode::from_gilrs(button) {
                                 events![InputDeviceEvent::Gamepad(GamepadEvent::Value {
                                     code: value_code,
                                     value: (value * 255.0) as u8,
@@ -100,7 +100,7 @@ impl InputProvider {
                         }
                         gilrs::EventType::AxisChanged(axis, value, _code) => {
                             if let Some((positive_value_code, negative_value_code)) =
-                                gilrs_to_axis(axis)
+                                ValueCode::from_gilrs_axis(axis)
                             {
                                 events![
                                     InputDeviceEvent::Gamepad(GamepadEvent::Value {

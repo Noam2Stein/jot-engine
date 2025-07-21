@@ -9,4 +9,4 @@ gilrs     = "0.11.0"
 jot_input = { path = "../jot_input" }
 pollster  = "0.4.0"
 wgpu      = "24.0.1"
-winit     = "0.30.9"
+winit     = "0.30.11"

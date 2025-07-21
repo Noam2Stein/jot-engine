@@ -5,3 +5,8 @@ version = "0.1.0"
 
 [dependencies]
 jot_input = { path = "../jot_input" }
+
+bitvec = "1.0.1"
+tinyset = { git = "https://github.com/Noam2Stein/tinyset", features = [
+    "winit",
+] }
