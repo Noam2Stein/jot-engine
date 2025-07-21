@@ -1,0 +1,7 @@
+[package]
+edition = "2024"
+name    = "jot_scheme"
+version = "0.1.0"
+
+[dependencies]
+jot_input = { path = "../jot_input" }

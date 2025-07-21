@@ -7,6 +7,6 @@ members = [
     "jot_game",
     "jot_gpu",
     "jot_input",
-    "jot_math", "jot_renderer2d",
+    "jot_math", "jot_renderer2d", "jot_scheme",
     "jot_window",
 ]
