@@ -4,9 +4,11 @@ use jot_input::*;
 
 mod button;
 mod flat_binding;
+mod value;
 mod value_binding;
 pub use button::*;
 pub use flat_binding::*;
+pub use value::*;
 pub use value_binding::*;
 
 pub trait InputState: Debug + Copy + Eq + Hash + Default {

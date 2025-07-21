@@ -17,7 +17,7 @@ impl InputState for Button {
 
     fn new_resolver(bindings: Self::Bindings) -> Self::ResolverState {
         ButtonResolver {
-            bindings: bindings.to_map(),
+            binding_map: bindings.to_map(),
             held_bindings: BitArray::default(),
             is_triggered: false,
         }
@@ -41,13 +41,14 @@ impl InputState for Button {
                 state,
                 ..
             }) => {
-                if let Some(binding_idx) = resolver.bindings.get(&FlatBinding::Key(*key)) {
+                if let Some(binding_idx) = resolver.binding_map.get(&FlatBinding::Key(*key)) {
                     set_binding(resolver, *binding_idx, state.is_pressed());
                 }
             }
 
             InputDeviceEvent::Mouse(MouseEvent::Button { button, state }) => {
-                if let Some(binding_idx) = resolver.bindings.get(&FlatBinding::MouseButton(*button))
+                if let Some(binding_idx) =
+                    resolver.binding_map.get(&FlatBinding::MouseButton(*button))
                 {
                     set_binding(resolver, *binding_idx, state.is_pressed());
                 }
@@ -55,34 +56,34 @@ impl InputState for Button {
 
             InputDeviceEvent::Mouse(MouseEvent::Scroll(scroll_delta)) => {
                 if scroll_delta.x() > 0.0 {
-                    if let Some(_) = resolver.bindings.get(&FlatBinding::MouseScrollRight) {
+                    if let Some(_) = resolver.binding_map.get(&FlatBinding::MouseScrollRight) {
                         resolver.is_triggered = true;
                     }
                 } else if scroll_delta.x() < 0.0 {
-                    if let Some(_) = resolver.bindings.get(&FlatBinding::MouseScrollLeft) {
+                    if let Some(_) = resolver.binding_map.get(&FlatBinding::MouseScrollLeft) {
                         resolver.is_triggered = true;
                     }
                 }
 
                 if scroll_delta.y() > 0.0 {
-                    if let Some(_) = resolver.bindings.get(&FlatBinding::MouseScrollUp) {
+                    if let Some(_) = resolver.binding_map.get(&FlatBinding::MouseScrollUp) {
                         resolver.is_triggered = true;
                     }
                 } else if scroll_delta.y() < 0.0 {
-                    if let Some(_) = resolver.bindings.get(&FlatBinding::MouseScrollDown) {
+                    if let Some(_) = resolver.binding_map.get(&FlatBinding::MouseScrollDown) {
                         resolver.is_triggered = true;
                     }
                 }
             }
 
             InputDeviceEvent::Gamepad(GamepadEvent::Button { button, state }) => {
-                if let Some(binding_idx) = resolver.bindings.get(&FlatBinding::Button(*button)) {
+                if let Some(binding_idx) = resolver.binding_map.get(&FlatBinding::Button(*button)) {
                     set_binding(resolver, *binding_idx, state.is_pressed());
                 }
             }
 
             InputDeviceEvent::Gamepad(GamepadEvent::Value { code, value }) => {
-                if let Some(binding_idx) = resolver.bindings.get(&FlatBinding::Value(*code)) {
+                if let Some(binding_idx) = resolver.binding_map.get(&FlatBinding::Value(*code)) {
                     set_binding(resolver, *binding_idx, *value > u8::MAX / 2);
                 }
             }
@@ -109,7 +110,7 @@ mod private {
 
     #[derive(Debug, Clone, PartialEq, Eq, Default)]
     pub struct ButtonResolver {
-        pub(super) bindings: HashMap<FlatBinding, usize>,
+        pub(super) binding_map: HashMap<FlatBinding, usize>,
         pub(super) held_bindings: BitArray<[u64; 1]>,
         pub(super) is_triggered: bool,
     }
