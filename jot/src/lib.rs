@@ -16,4 +16,5 @@ modules! {
     math,
     window,
     renderer2d,
+    fixed,
 }

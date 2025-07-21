@@ -31,8 +31,9 @@ pub trait Game {
 }
 
 #[must_use]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum GameFlow {
+    #[default]
     Continue,
     Exit,
 }

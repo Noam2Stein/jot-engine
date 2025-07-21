@@ -4,6 +4,7 @@ name    = "jot"
 version = "0.1.0"
 
 [dependencies]
+jot_fixed      = { path = "../jot_fixed", optional = true }
 jot_game       = { path = "../jot_game", optional = true }
 jot_gpu        = { path = "../jot_gpu", optional = true }
 jot_input      = { path = "../jot_input", optional = true }
@@ -13,6 +14,7 @@ jot_window     = { path = "../jot_window", optional = true }
 paste          = "1.0.15"
 
 [features]
+fixed      = [ "jot_fixed" ]
 game       = [ "gpu", "input", "jot_game", "math" ]
 gpu        = [ "jot_gpu", "math" ]
 input      = [ "jot_input", "math" ]

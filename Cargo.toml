@@ -3,7 +3,7 @@
 members = [
     "examples/game",
     "examples/pong",
-    "jot",
+    "jot", "jot_fixed",
     "jot_game",
     "jot_gpu",
     "jot_input",
