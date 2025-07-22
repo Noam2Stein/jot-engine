@@ -1,0 +1,7 @@
+[package]
+edition = "2024"
+name    = "jot_ecs"
+version = "0.1.0"
+
+[dependencies]
+bevy_ecs = "0.16.1"

@@ -4,7 +4,7 @@ name    = "jot_window"
 version = "0.1.0"
 
 [dependencies]
-bevy_ecs  = "0.15.3"
+bevy_ecs  = "0.16.1"
 gilrs     = "0.11.0"
 jot_input = { path = "../jot_input" }
 pollster  = "0.4.0"

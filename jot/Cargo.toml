@@ -5,6 +5,7 @@ version = "0.1.0"
 
 [dependencies]
 jot_collections = { path = "../jot_collections", optional = true }
+jot_ecs         = { path = "../jot_ecs", optional = true }
 jot_fixed       = { path = "../jot_fixed", optional = true }
 jot_game        = { path = "../jot_game", optional = true }
 jot_gpu         = { path = "../jot_gpu", optional = true }
@@ -17,6 +18,7 @@ paste           = "1.0.15"
 
 [features]
 collections = [ "jot_collections" ]
+ecs         = [ "jot_ecs" ]
 fixed       = [ "jot_fixed" ]
 game        = [ "gpu", "input", "jot_game", "math" ]
 gpu         = [ "jot_gpu", "math" ]
