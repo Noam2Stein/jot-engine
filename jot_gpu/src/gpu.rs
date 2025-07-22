@@ -14,7 +14,7 @@ impl Gpu {
                 .expect("GPU adapter not found");
 
         let (device, queue) =
-            pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor::default(), None))
+            pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor::default()))
                 .expect("Failed to get GPU device from adapter");
 
         Self {

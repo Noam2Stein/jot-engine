@@ -46,7 +46,7 @@ impl Gpu {
             .expect("Failed to create a default surface config");
 
         config.format = GpuTextureFormat::Rgba8Unorm;
-        config.present_mode = wgpu::PresentMode::AutoVsync;
+        config.present_mode = wgpu::PresentMode::AutoNoVsync;
 
         surface.configure(&self.device, &config);
 

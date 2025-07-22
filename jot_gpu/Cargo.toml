@@ -11,5 +11,5 @@ jot_window          = { path = "../jot_window" }
 bevy_ecs = "0.15.3"
 crevice  = "0.18.0"
 pollster = "0.4.0"
-wgpu     = "24.0.1"
+wgpu     = "25.0.1"
 winit    = "0.30.9"
