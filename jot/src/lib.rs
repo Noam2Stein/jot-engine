@@ -19,4 +19,5 @@ modules! {
     fixed,
     scheme,
     collections,
+    ecs,
 }

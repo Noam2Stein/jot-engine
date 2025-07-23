@@ -25,7 +25,7 @@ pub trait Game {
         event.into()
     }
 
-    fn draw(&self, output: &GpuTexture<2>, gpu: &Gpu) {
+    fn draw(&mut self, output: &GpuTexture<2>, gpu: &Gpu) {
         output.clear(Some(vec4!(0.0, 0.0, 0.0, 0.0)), None, gpu);
     }
 }

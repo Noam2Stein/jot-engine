@@ -133,7 +133,7 @@ impl Game for Pong {
         GameFlow::from(event)
     }
 
-    fn draw(&self, output: &GpuTexture<2>, gpu: &Gpu) {
+    fn draw(&mut self, output: &GpuTexture<2>, gpu: &Gpu) {
         self.renderer.render(
             RenderInput2D {
                 cam: Camera2D {
