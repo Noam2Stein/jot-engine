@@ -11,30 +11,26 @@ pub struct AssetId<T: AssetType> {
 }
 
 impl<T: AssetType> AssetId<T> {
-    pub fn load(self, ctx: &AssetContext, gpu: &Gpu) -> Asset<T> {
-        Asset::load(self, ctx, gpu)
+    pub fn load(self, gpu: &Gpu) -> Asset<T> {
+        Asset::load(self, gpu)
     }
 
-    pub fn load_unchanging(self, gpu: &Gpu) -> Asset<T> {
-        Asset::load_unchanging(self, gpu)
+    pub const unsafe fn new_unchecked(path: &'static str) -> Self {
+        Self {
+            path,
+            t: PhantomData,
+        }
     }
 
+    #[cfg(debug_assertions)]
     pub(super) fn has_changed_since(&self, time: SystemTime) -> bool {
-        #[cfg(not(debug_assertions))]
-        {
-            false
-        }
-
-        #[cfg(debug_assertions)]
-        {
-            File::open(self.path).map_or(false, |file| {
-                file.metadata().map_or(false, |metadata| {
-                    metadata
-                        .modified()
-                        .map_or(false, |modified| modified > time)
-                })
+        File::open(self.path).map_or(false, |file| {
+            file.metadata().map_or(false, |metadata| {
+                metadata
+                    .modified()
+                    .map_or(false, |modified| modified > time)
             })
-        }
+        })
     }
 }
 
