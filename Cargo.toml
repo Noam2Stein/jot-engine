@@ -4,7 +4,7 @@ members = [
     "examples/dodger",
     "examples/empty",
     "examples/pong",
-    "jot",
+    "jot", "jot_asset",
     "jot_collections",
     "jot_ecs",
     "jot_fixed",
