@@ -4,6 +4,7 @@ name    = "jot"
 version = "0.1.0"
 
 [dependencies]
+jot_asset       = { path = "../jot_asset", optional = true }
 jot_collections = { path = "../jot_collections", optional = true }
 jot_ecs         = { path = "../jot_ecs", optional = true }
 jot_fixed       = { path = "../jot_fixed", optional = true }
@@ -17,6 +18,7 @@ jot_window      = { path = "../jot_window", optional = true }
 paste           = "1.0.15"
 
 [features]
+asset       = [ "jot_asset" ]
 collections = [ "jot_collections" ]
 ecs         = [ "jot_ecs" ]
 fixed       = [ "jot_fixed" ]

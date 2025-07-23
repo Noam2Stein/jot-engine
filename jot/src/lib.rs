@@ -20,4 +20,5 @@ modules! {
     scheme,
     collections,
     ecs,
+    asset,
 }

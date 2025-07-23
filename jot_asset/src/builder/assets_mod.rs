@@ -8,7 +8,7 @@ use quote::{ToTokens, quote};
 
 pub struct AssetsMod {
     assets_dir: PathBuf,
-    consts: HashMap<Ident, TokenStream>,
+    consts: Vec<TokenStream>,
     mods: HashMap<Ident, AssetsMod>,
 }
 
@@ -16,7 +16,7 @@ impl AssetsMod {
     pub fn new(assets_dir: PathBuf) -> Self {
         Self {
             assets_dir,
-            consts: HashMap::new(),
+            consts: Vec::new(),
             mods: HashMap::new(),
         }
     }
@@ -52,7 +52,7 @@ impl AssetsMod {
                 .entry(mod_ident.clone())
                 .or_insert_with(|| AssetsMod {
                     assets_dir: current.assets_dir.clone(),
-                    consts: HashMap::new(),
+                    consts: Vec::new(),
                     mods: HashMap::new(),
                 });
 
@@ -63,11 +63,11 @@ impl AssetsMod {
         let full_path = current.assets_dir.join(relative_path);
         let full_path_str = full_path.to_string_lossy().replace('\\', "/");
 
-        let const_value = quote! {
-            unsafe { ::jot::asset::AssetId::<#type_path>::new_unchecked(#full_path_str) }
-        };
-
-        current.consts.insert(ident, const_value);
+        current.consts.push(quote! {
+            #[allow(non_upper_case_globals)]
+            pub const #ident: ::jot::asset::AssetId<#type_path>
+                = unsafe { ::jot::asset::AssetId::<#type_path>::new_unchecked(#full_path_str) };
+        });
     }
 }
 
@@ -84,10 +84,8 @@ impl ToTokens for AssetsMod {
             });
         }
 
-        for (ident, value) in &self.consts {
-            tokens.extend(quote! {
-                pub const #ident: ::jot::asset::AssetId<_> = #value;
-            });
+        for const_ in &self.consts {
+            const_.to_tokens(tokens);
         }
     }
 }

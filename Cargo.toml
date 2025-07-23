@@ -2,7 +2,7 @@
 
 members = [
     "examples/dodger",
-    "examples/empty",
+    "examples/empty", "examples/flappy_bird",
     "examples/pong",
     "jot", "jot_asset",
     "jot_collections",
