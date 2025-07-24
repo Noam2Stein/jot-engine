@@ -47,46 +47,70 @@ impl AssetBuilder {
         let assets_dir = manifest_dir.join("assets");
         let src_assets_file = manifest_dir.join("src/assets.rs");
 
-        let mut assets_mod = AssetsMod::new(assets_dir.clone());
+        let assets = find_assets(&assets_dir);
 
-        for asset_path in find_assets(&assets_dir) {
-            let meta = read_metadata::<AssetMetadata>(&asset_path);
+        let assets_mod_str = match assets {
+            Ok(assets) => {
+                let mut assets_mod = AssetsMod::new(assets_dir.clone());
 
-            let asset_kind = self.get_asset_kind(&asset_path, meta.as_ref());
+                for asset_path in assets {
+                    let type_path = self.build_asset(&asset_path);
 
-            let asset_type = self.types.get(&asset_kind).expect(&format!(
-                "failed to select asset data-type for `{asset_kind}` kind"
-            ));
+                    assets_mod.push(asset_path.strip_prefix(&assets_dir).unwrap(), type_path);
+                }
 
-            assets_mod.push(
-                asset_path.strip_prefix(&assets_dir).unwrap(),
-                &asset_type.type_path,
-            );
-        }
+                assets_mod.to_string()
+            }
+
+            Err(err) => err.to_token_stream().to_string(),
+        };
 
         File::create(&src_assets_file)
             .expect("failed to create `assets.rs`")
-            .write_fmt(format_args!("{}", assets_mod.to_token_stream().to_string()))
+            .write(assets_mod_str.as_bytes())
             .expect("failed to write to `assets.rs`");
     }
 
-    fn get_asset_kind(&self, asset_path: &Path, meta: Option<&AssetMetadata>) -> String {
+    fn build_asset(&self, asset_path: &Path) -> BuilderResult<TokenStream> {
+        let meta = read_metadata::<AssetMetadata>(&asset_path);
+
+        let asset_kind = self.get_asset_kind(&asset_path, meta.as_ref())?;
+
+        let asset_type = self.get_asset_type(&asset_kind)?;
+
+        Ok(asset_type.type_path.clone())
+    }
+
+    fn get_asset_kind(
+        &self,
+        asset_path: &Path,
+        meta: Option<&AssetMetadata>,
+    ) -> BuilderResult<String> {
         if let Some(meta) = meta.as_ref() {
-            meta.asset_kind.clone()
+            Ok(meta.asset_kind.clone())
+        } else if let Some(default) = self.ext_defaults.get(
+            &asset_path
+                .extension()
+                .unwrap()
+                .to_string_lossy()
+                .to_string(),
+        ) {
+            Ok(default.clone())
         } else {
-            self.ext_defaults
-                .get(
-                    &asset_path
-                        .extension()
-                        .unwrap()
-                        .to_string_lossy()
-                        .to_string(),
-                )
-                .expect(&format!(
-                    "failed to select asset kind for \"{}\"",
-                    asset_path.display()
-                ))
-                .clone()
+            Err(builder_error!(
+                "failed to select asset kind for \"{}\"",
+                asset_path.display()
+            ))
+        }
+    }
+
+    fn get_asset_type(&self, asset_kind: &String) -> BuilderResult<&AssetTypeInfo> {
+        match self.types.get(asset_kind) {
+            Some(asset_type) => Ok(asset_type),
+
+            None => Err(builder_error!(
+                "failed to select asset data-type for `{asset_kind}` kind"
+            )),
         }
     }
 }

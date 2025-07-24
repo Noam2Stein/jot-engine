@@ -1,10 +1,14 @@
 use std::{
     collections::HashMap,
+    fmt::Display,
     path::{Path, PathBuf},
 };
 
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{ToTokens, quote};
+use syn::parse2;
+
+use super::*;
 
 pub struct AssetsMod {
     assets_dir: PathBuf,
@@ -21,7 +25,7 @@ impl AssetsMod {
         }
     }
 
-    pub fn push(&mut self, relative_path: &Path, type_path: &TokenStream) {
+    pub fn push(&mut self, relative_path: &Path, type_path: BuilderResult<TokenStream>) {
         assert!(
             !relative_path.is_absolute(),
             "path must be relative to assets_dir"
@@ -59,14 +63,25 @@ impl AssetsMod {
             components.next();
         }
 
-        // Full asset path from root
-        let full_path = current.assets_dir.join(relative_path);
-        let full_path_str = full_path.to_string_lossy().replace('\\', "/");
+        current.consts.push(match type_path {
+            Ok(type_path) => {
+                // Full asset path from root
+                let full_path = current.assets_dir.join(relative_path);
+                let full_path_str = full_path.to_string_lossy().replace('\\', "/");
 
-        current.consts.push(quote! {
-            #[allow(non_upper_case_globals)]
-            pub const #ident: ::jot::asset::AssetId<#type_path>
-                = unsafe { ::jot::asset::AssetId::<#type_path>::new_unchecked(#full_path_str) };
+                quote! {
+                    #[allow(non_upper_case_globals)]
+                    pub const #ident: ::jot::asset::AssetId<#type_path>
+                        = unsafe { ::jot::asset::AssetId::<#type_path>::new_unchecked(#full_path_str) };
+                }
+            }
+
+            Err(err) => {
+                quote! {
+                    #[allow(non_upper_case_globals)]
+                    pub const #ident: () = #err;
+                }
+            }
         });
     }
 }
@@ -87,5 +102,15 @@ impl ToTokens for AssetsMod {
         for const_ in &self.consts {
             const_.to_tokens(tokens);
         }
+    }
+}
+
+impl Display for AssetsMod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            prettyplease::unparse(&parse2(self.to_token_stream()).unwrap())
+        )
     }
 }

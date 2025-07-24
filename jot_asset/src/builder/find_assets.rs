@@ -4,15 +4,27 @@ use std::{
     path::{Path, PathBuf},
 };
 
-pub fn find_assets(assets_dir: &Path) -> impl Iterator<Item = PathBuf> {
-    fn push_dir(dir: &Path, output: &mut Vec<PathBuf>) {
-        for entry in read_dir(dir).expect("failed to read asset directory") {
-            let entry = entry.expect("failed to read asset directory entry");
+use super::*;
+
+pub fn find_assets(assets_dir: &Path) -> BuilderResult<impl Iterator<Item = PathBuf>> {
+    fn push_dir(dir: &Path, output: &mut Vec<PathBuf>) -> BuilderResult<()> {
+        let entries = read_dir(dir);
+
+        let entries = entries
+            .map_err(|_| builder_error!("failed to read asset directory \"{}\"", dir.display()))?;
+
+        for entry in entries {
+            let entry = entry.map_err(|_| {
+                builder_error!(
+                    "failed to read asset directory entry in \"{}\"",
+                    dir.display()
+                )
+            })?;
 
             let path = entry.path();
-            let metadata = entry
-                .metadata()
-                .expect("failed to get asset directory entry metadata");
+            let metadata = entry.metadata().map_err(|_| {
+                builder_error!("failed to read asset metadata in \"{}\"", dir.display())
+            })?;
 
             if !metadata.is_file() {
                 continue;
@@ -31,19 +43,32 @@ pub fn find_assets(assets_dir: &Path) -> impl Iterator<Item = PathBuf> {
                 .iter()
                 .any(|other| other.with_extension("") == path.with_extension(""))
             {
-                panic!("multiple assets \"{}\"", path.with_extension("").display(),);
+                return Err(builder_error!(
+                    "multiple assets \"{}\"",
+                    path.with_extension("").display(),
+                ));
             }
 
             output.push(path);
         }
 
-        for entry in read_dir(dir).expect("failed to read asset directory") {
-            let entry = entry.expect("failed to read asset directory entry");
+        let entries = read_dir(dir);
+
+        let entries = entries
+            .map_err(|_| builder_error!("failed to read asset directory \"{}\"", dir.display()))?;
+
+        for entry in entries {
+            let entry = entry.map_err(|_| {
+                builder_error!(
+                    "failed to read asset directory entry in \"{}\"",
+                    dir.display()
+                )
+            })?;
 
             let path = entry.path();
-            let metadata = entry
-                .metadata()
-                .expect("failed to get asset directory entry metadata");
+            let metadata = entry.metadata().map_err(|_| {
+                builder_error!("failed to read asset metadata in \"{}\"", dir.display())
+            })?;
 
             if !metadata.is_dir() {
                 continue;
@@ -53,13 +78,15 @@ pub fn find_assets(assets_dir: &Path) -> impl Iterator<Item = PathBuf> {
                 continue;
             }
 
-            push_dir(&path, output);
+            push_dir(&path, output)?;
         }
+
+        Ok(())
     }
 
     let mut output = Vec::new();
 
-    push_dir(assets_dir, &mut output);
+    push_dir(assets_dir, &mut output)?;
 
-    output.into_iter()
+    Ok(output.into_iter())
 }
