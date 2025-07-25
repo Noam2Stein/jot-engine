@@ -5,14 +5,15 @@ use crevice::std140::AsStd140;
 use super::*;
 
 pub trait Camera2D: Debug + Copy + PartialEq + AsStd140 {
-    /// Declare the camera struct.
-    const WGSL_STRUCT: &[&str];
+    /// Declare the camera struct's fields.
+    const WGSL_FIELDS: &[&str];
 
     /// Inserted into the vertex function.
     ///
     /// Input:
     /// - `cam: Camera`.
     /// - `world_pos: vec2f`.
+    /// - `aspect: f32`.
     ///
     /// Output:
     /// - set `output.pos`.
@@ -25,40 +26,24 @@ pub struct PosCamera2D {
     pub ortho_size: f32,
 }
 
-impl Transform2D for SVec2P {
-    type Resources = ();
+/// Acts as a camera with its center at `(0, 0)` and its ortho_size as `1.0`.
+#[derive(Debug, Clone, Copy, PartialEq, AsStd140)]
+pub struct NoCamera2D {}
 
-    const LAYOUT: &[wgpu::VertexAttribute] = &[wgpu::VertexAttribute {
-        format: wgpu::VertexFormat::Sint32x2,
-        offset: 0,
-        shader_location: 0,
-    }];
-
-    const WGSL_VERTEX_FIELDS: &[&str] = &["center: vec2i"];
-
-    const WGSL_GLOBALS: &[&str] = &[];
+impl Camera2D for PosCamera2D {
+    const WGSL_FIELDS: &[&str] = &["center: vec2i", "ortho_size: f32"];
 
     const WGSL_VERTEX_LOGIC: &str = "
-        let world_pos = vec2f(in.center + size * input.vertex_pos / 2) / 256.0;
+        let cam_pos = world_pos - vec2f(cam.center) / 256.0;
+        let cam_extents = vec2f(cam.ortho_size * aspect, cam.ortho_size);
+        output.pos = vec4(cam_pos / cam_extents, input.depth, 1.0);
     ";
+}
 
-    fn create_bind_group_layout(gpu: &Gpu) -> wgpu::BindGroupLayout {
-        gpu.device
-            .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                label: Some("Renderer2D SVec2P BindGroupLayout"),
-                entries: &[],
-            })
-    }
+impl Camera2D for NoCamera2D {
+    const WGSL_FIELDS: &[&str] = &[];
 
-    fn create_bind_group(
-        _resources: Self::Resources,
-        layout: &wgpu::BindGroupLayout,
-        gpu: &Gpu,
-    ) -> wgpu::BindGroup {
-        gpu.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("Renderer2D SVec2P BindGroup"),
-            layout,
-            entries: &[],
-        })
-    }
+    const WGSL_VERTEX_LOGIC: &str = "
+        output.pos = vec2(world_pos.x / aspect, world_pos.y);
+    ";
 }

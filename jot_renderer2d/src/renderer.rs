@@ -1,73 +1,45 @@
-use std::{mem::offset_of, num::NonZeroU64};
+use std::{marker::PhantomData, mem::offset_of, num::NonZeroU64};
 
-use crevice::std140::AsStd140;
+use const_format::{StrWriter, unwrap, writec};
+use crevice::std140::{AsStd140, Std140};
 use wgpu::util::DeviceExt;
 
 use super::*;
 
-pub struct Renderer2D<const QUAD_CAP: usize> {
+pub struct Renderer2D<const QUAD_CAP: usize, V: Visual2D, T: Transform2D, C: Camera2D> {
     vertex_buf: wgpu::Buffer,
     index_buf: wgpu::Buffer,
     instance_buf: wgpu::Buffer,
 
-    cam_buf: wgpu::Buffer,
+    aspect_buf: wgpu::Buffer,
+    cam_buf: Option<wgpu::Buffer>,
     bind_group: wgpu::BindGroup,
 
+    visual_bind_group: wgpu::BindGroup,
+    transform_bind_group: wgpu::BindGroup,
+
     pipeline: wgpu::RenderPipeline,
+
+    _v: PhantomData<V>,
+    _t: PhantomData<T>,
+    _c: PhantomData<C>,
 }
 
-impl<const QUAD_CAP: usize> Renderer2D<QUAD_CAP> {
-    pub fn new(gpu: &Gpu) -> Self {
-        const VERTICIES: [IVec2P; 4] = [vec2p!(-1, -1), vec2p!(1, -1), vec2p!(1, 1), vec2p!(-1, 1)];
-
-        const VERTEX_LAYOUT: wgpu::VertexBufferLayout = wgpu::VertexBufferLayout {
-            array_stride: size_of::<IVec2P>() as u64,
-            step_mode: wgpu::VertexStepMode::Vertex,
-            attributes: &[wgpu::VertexAttribute {
-                format: wgpu::VertexFormat::Sint32x2,
-                offset: 0,
-                shader_location: 0,
-            }],
-        };
-
-        const INDICIES: [u16; 6] = [0, 1, 2, 2, 3, 0];
-
-        const INSTANCE_LAYOUT: wgpu::VertexBufferLayout = wgpu::VertexBufferLayout {
-            array_stride: size_of::<Quad>() as u64,
-            step_mode: wgpu::VertexStepMode::Instance,
-            attributes: &[
-                // rect.center
-                wgpu::VertexAttribute {
-                    format: wgpu::VertexFormat::Sint32x2,
-                    offset: offset_of!(Quad, rect) as u64,
-                    shader_location: 1,
-                },
-                // rect.extents
-                wgpu::VertexAttribute {
-                    format: wgpu::VertexFormat::Sint32x2,
-                    offset: (offset_of!(Quad, rect) + size_of::<SVec2P>()) as u64,
-                    shader_location: 2,
-                },
-                // depth
-                wgpu::VertexAttribute {
-                    format: wgpu::VertexFormat::Float32,
-                    offset: offset_of!(Quad, depth) as u64,
-                    shader_location: 3,
-                },
-                // color
-                wgpu::VertexAttribute {
-                    format: wgpu::VertexFormat::Float32x4,
-                    offset: offset_of!(Quad, color) as u64,
-                    shader_location: 4,
-                },
-            ],
-        };
+impl<const QUAD_CAP: usize, V: Visual2D, T: Transform2D, C: Camera2D>
+    Renderer2D<QUAD_CAP, V, T, C>
+{
+    pub fn new(
+        gpu: &Gpu,
+        visual_resoureces: V::Resources,
+        transform_resources: T::Resources,
+    ) -> Self {
+        println!("{}", Self::SHADER);
 
         let vertex_buf = gpu
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Renderer2D Vertex Buffer"),
-                contents: slice_bytes(&VERTICIES),
+                contents: slice_bytes(&Self::VERTICIES),
                 usage: wgpu::BufferUsages::VERTEX,
             });
 
@@ -75,60 +47,120 @@ impl<const QUAD_CAP: usize> Renderer2D<QUAD_CAP> {
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                 label: Some("Renderer2D Index Buffer"),
-                contents: slice_bytes(&INDICIES),
+                contents: slice_bytes(&Self::INDICIES),
                 usage: wgpu::BufferUsages::INDEX,
             });
 
         let instance_buf = gpu.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Renderer2D Instance Buffer"),
             mapped_at_creation: false,
-            size: size_of::<[Quad; QUAD_CAP]>() as u64,
+            size: size_of::<[Quad<V, T>; QUAD_CAP]>() as u64,
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
         });
 
-        let cam_buf = gpu.device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("Renderer2D Camera Buffer"),
+        let aspect_buf = gpu.device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("Renderer2D Aspect Buffer"),
             mapped_at_creation: false,
-            size: size_of::<CameraUniform>() as u64,
+            size: size_of::<f32>() as u64,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
-        let bind_group_layout =
+        let cam_buf = if !C::WGSL_FIELDS.is_empty() {
+            Some(gpu.device.create_buffer(&wgpu::BufferDescriptor {
+                label: Some("Renderer2D Camera Buffer"),
+                mapped_at_creation: false,
+                size: size_of::<CameraUniform>() as u64,
+                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            }))
+        } else {
+            None
+        };
+
+        let aspect_layout_entry = wgpu::BindGroupLayoutEntry {
+            binding: 0,
+            ty: wgpu::BindingType::Buffer {
+                ty: wgpu::BufferBindingType::Uniform,
+                has_dynamic_offset: false,
+                min_binding_size: Some(NonZeroU64::new(size_of::<f32>() as u64).unwrap()),
+            },
+            count: None,
+            visibility: wgpu::ShaderStages::all(),
+        };
+
+        let bind_group_layout = if let Some(_) = &cam_buf {
             gpu.device
                 .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                     label: Some("Renderer2D Bind Group Layout"),
-                    entries: &[wgpu::BindGroupLayoutEntry {
-                        binding: 0,
-                        ty: wgpu::BindingType::Buffer {
-                            ty: wgpu::BufferBindingType::Uniform,
-                            has_dynamic_offset: false,
-                            min_binding_size: Some(
-                                NonZeroU64::new(size_of::<CameraUniform>() as u64).unwrap(),
-                            ),
+                    entries: &[
+                        aspect_layout_entry,
+                        wgpu::BindGroupLayoutEntry {
+                            binding: 1,
+                            ty: wgpu::BindingType::Buffer {
+                                ty: wgpu::BufferBindingType::Uniform,
+                                has_dynamic_offset: false,
+                                min_binding_size: Some(
+                                    NonZeroU64::new(size_of::<CameraUniform>() as u64).unwrap(),
+                                ),
+                            },
+                            count: None,
+                            visibility: wgpu::ShaderStages::VERTEX,
                         },
-                        count: None,
-                        visibility: wgpu::ShaderStages::VERTEX,
-                    }],
-                });
+                    ],
+                })
+        } else {
+            gpu.device
+                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                    label: Some("Renderer2D Bind Group Layout"),
+                    entries: &[aspect_layout_entry],
+                })
+        };
 
-        let bind_group = gpu.device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("Renderer2D Bind Group"),
-            layout: &bind_group_layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
-                    buffer: &cam_buf,
-                    offset: 0,
-                    size: None,
-                }),
-            }],
-        });
+        let aspect_resource = wgpu::BindGroupEntry {
+            binding: 0,
+            resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+                buffer: &aspect_buf,
+                offset: 0,
+                size: None,
+            }),
+        };
+
+        let bind_group = if let Some(cam_buf) = &cam_buf {
+            gpu.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("Renderer2D Bind Group"),
+                layout: &bind_group_layout,
+                entries: &[
+                    aspect_resource,
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+                            buffer: &cam_buf,
+                            offset: 0,
+                            size: None,
+                        }),
+                    },
+                ],
+            })
+        } else {
+            gpu.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("Renderer2D Bind Group"),
+                layout: &bind_group_layout,
+                entries: &[aspect_resource],
+            })
+        };
+
+        let visual_bind_group_layout = V::create_bind_group_layout(gpu);
+        let visual_bind_group =
+            V::create_bind_group(visual_resoureces, &visual_bind_group_layout, gpu);
+
+        let transform_bind_group_layout = T::create_bind_group_layout(gpu);
+        let transform_bind_group =
+            T::create_bind_group(transform_resources, &transform_bind_group_layout, gpu);
 
         let pipeline_layout = gpu
             .device
             .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Renderer2D Pipeline Layout"),
-                bind_group_layouts: &[&bind_group_layout],
+                bind_group_layouts: &[&bind_group_layout, &visual_bind_group_layout],
                 push_constant_ranges: &[],
             });
 
@@ -136,7 +168,7 @@ impl<const QUAD_CAP: usize> Renderer2D<QUAD_CAP> {
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
                 label: Some("Renderer2D Shader Module"),
-                source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(shader::SOURCE)),
+                source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(Self::SHADER)),
             });
 
         let pipeline = gpu
@@ -148,7 +180,7 @@ impl<const QUAD_CAP: usize> Renderer2D<QUAD_CAP> {
                     module: &shader,
                     entry_point: Some("vs_main"),
                     compilation_options: wgpu::PipelineCompilationOptions::default(),
-                    buffers: &[VERTEX_LAYOUT, INSTANCE_LAYOUT],
+                    buffers: &[Self::VERTEX_LAYOUT, Self::INSTANCE_LAYOUT],
                 },
                 primitive: wgpu::PrimitiveState {
                     topology: wgpu::PrimitiveTopology::TriangleList,
@@ -197,30 +229,35 @@ impl<const QUAD_CAP: usize> Renderer2D<QUAD_CAP> {
             index_buf,
             instance_buf,
 
+            aspect_buf,
             cam_buf,
             bind_group,
 
+            visual_bind_group,
+            transform_bind_group,
+
             pipeline,
+
+            _v: PhantomData,
+            _t: PhantomData,
+            _c: PhantomData,
         }
     }
 
-    pub fn render(&self, input: RenderInput2D, output: &GpuTexture<2>, gpu: &Gpu) {
+    pub fn render(&self, input: RenderInput2D<V, T, C>, output: &GpuTexture<2>, gpu: &Gpu) {
         gpu.queue.write_buffer(
-            &self.cam_buf,
+            &self.aspect_buf,
             0,
-            CameraUniform {
-                center: input.cam.center.map(|s| s.0).to_storage(),
-                extents: vec2p!(
-                    output.size().x() as f32 / output.size().y() as f32 * input.cam.ortho_size,
-                    input.cam.ortho_size,
-                ),
-            }
-            .as_std140()
-            .as_bytes(),
+            slice_bytes(&[output.size().x() as f32 / output.size().y() as f32]),
         );
 
+        if let Some(cam_buf) = &self.cam_buf {
+            gpu.queue
+                .write_buffer(cam_buf, 0, input.cam.as_std140().as_bytes());
+        }
+
         if input.quads.len() == 0 {
-            output.clear(Some(input.cam.background_color), None, gpu);
+            output.clear(Some(input.background_color), None, gpu);
         }
 
         for (batch_idx, batch) in input.quads.chunks(QUAD_CAP).enumerate() {
@@ -236,10 +273,10 @@ impl<const QUAD_CAP: usize> Renderer2D<QUAD_CAP> {
 
             let color_load = if batch_idx == 0 {
                 wgpu::LoadOp::Clear(wgpu::Color {
-                    r: input.cam.background_color.x() as f64,
-                    g: input.cam.background_color.y() as f64,
-                    b: input.cam.background_color.z() as f64,
-                    a: input.cam.background_color.w() as f64,
+                    r: input.background_color.x() as f64,
+                    g: input.background_color.y() as f64,
+                    b: input.background_color.z() as f64,
+                    a: input.background_color.w() as f64,
                 })
             } else {
                 wgpu::LoadOp::Load
@@ -278,6 +315,8 @@ impl<const QUAD_CAP: usize> Renderer2D<QUAD_CAP> {
             pass.set_vertex_buffer(1, self.instance_buf.slice(..batch_bytes.len() as u64));
 
             pass.set_bind_group(0, &self.bind_group, &[]);
+            pass.set_bind_group(1, &self.visual_bind_group, &[]);
+            pass.set_bind_group(2, &self.transform_bind_group, &[]);
             pass.set_pipeline(&self.pipeline);
 
             pass.draw_indexed(0..6, 0, 0..batch.len() as u32);
@@ -287,6 +326,190 @@ impl<const QUAD_CAP: usize> Renderer2D<QUAD_CAP> {
             gpu.queue.submit([encoder.finish()]);
         }
     }
+
+    const VERTICIES: [IVec2P; 4] = [vec2p!(-1, -1), vec2p!(1, -1), vec2p!(1, 1), vec2p!(-1, 1)];
+
+    const VERTEX_LAYOUT: wgpu::VertexBufferLayout<'static> = wgpu::VertexBufferLayout {
+        array_stride: size_of::<IVec2P>() as u64,
+        step_mode: wgpu::VertexStepMode::Vertex,
+        attributes: &[wgpu::VertexAttribute {
+            format: wgpu::VertexFormat::Sint32x2,
+            offset: 0,
+            shader_location: 0,
+        }],
+    };
+
+    const INDICIES: [u16; 6] = [0, 1, 2, 2, 3, 0];
+
+    const INSTANCE_LAYOUT_ATTRIBUTES: [wgpu::VertexAttribute; 64] = {
+        let mut output = [wgpu::VertexAttribute {
+            format: wgpu::VertexFormat::Float16,
+            offset: 0,
+            shader_location: 0,
+        }; 64];
+        let mut output_idx = 0;
+
+        let mut i = 0;
+        while i < V::LAYOUT.len() {
+            output[output_idx] = wgpu::VertexAttribute {
+                format: V::LAYOUT[i].format,
+                offset: offset_of!(Quad<V, T>, visual) as u64 + V::LAYOUT[i].offset,
+                shader_location: output_idx as u32 + 1,
+            };
+            output_idx += 1;
+
+            i += 1;
+        }
+
+        let mut i = 0;
+        while i < T::LAYOUT.len() {
+            output[output_idx] = wgpu::VertexAttribute {
+                format: T::LAYOUT[i].format,
+                offset: offset_of!(Quad<V, T>, transform) as u64 + T::LAYOUT[i].offset,
+                shader_location: output_idx as u32 + 1,
+            };
+            output_idx += 1;
+
+            i += 1;
+        }
+
+        // depth
+        output[output_idx] = wgpu::VertexAttribute {
+            format: wgpu::VertexFormat::Float32,
+            offset: offset_of!(Quad<V, T>, depth) as u64,
+            shader_location: output_idx as u32 + 1,
+        };
+        #[allow(unused_assignments)]
+        {
+            output_idx += 1;
+        }
+
+        output
+    };
+
+    const INSTANCE_LAYOUT: wgpu::VertexBufferLayout<'static> = {
+        wgpu::VertexBufferLayout {
+            array_stride: size_of::<Quad<V, T>>() as u64,
+            step_mode: wgpu::VertexStepMode::Instance,
+            attributes: &unsafe {
+                std::slice::from_raw_parts(
+                    Self::INSTANCE_LAYOUT_ATTRIBUTES.as_ptr(),
+                    V::LAYOUT.len() + T::LAYOUT.len() + 1,
+                )
+            },
+        }
+    };
+
+    const SHADER_RAW: StrWriter<[u8; 1028]> = {
+        let w = &mut StrWriter::new([0; 1028]);
+
+        // Aspect
+        unwrap!(writec!(
+            w,
+            "@group(0) @binding(0) var<uniform> aspect: f32;"
+        ));
+
+        // Camera
+        if !C::WGSL_FIELDS.is_empty() {
+            unwrap!(writec!(w, "struct Camera {{"));
+
+            let mut i = 0;
+            while i < C::WGSL_FIELDS.len() {
+                unwrap!(writec!(w, "{},", C::WGSL_FIELDS[i]));
+                i += 1;
+            }
+
+            unwrap!(writec!(w, "}}"));
+            unwrap!(writec!(
+                w,
+                "@group(0) @binding(1) var<uniform> cam: Camera;"
+            ));
+        }
+
+        // Visual
+        let mut i = 0;
+        while i < V::WGSL_GLOBALS.len() {
+            unwrap!(writec!(w, "{}", V::WGSL_GLOBALS[i]));
+            i += 1;
+        }
+
+        // Transform
+        let mut i = 0;
+        while i < T::WGSL_GLOBALS.len() {
+            unwrap!(writec!(w, "{}", T::WGSL_GLOBALS[i]));
+            i += 1;
+        }
+
+        // Vertex
+        unwrap!(writec!(w, "struct Vertex {{"));
+        unwrap!(writec!(w, "@location(0) vertex_pos: vec2i,"));
+
+        let mut i = 0;
+        while i < V::WGSL_VERTEX_FIELDS.len() {
+            unwrap!(writec!(
+                w,
+                "@location({}) {},",
+                1 + i,
+                V::WGSL_VERTEX_FIELDS[i]
+            ));
+            i += 1;
+        }
+
+        let mut i = 0;
+        while i < T::WGSL_VERTEX_FIELDS.len() {
+            unwrap!(writec!(
+                w,
+                "@location({}) {},",
+                1 + V::WGSL_VERTEX_FIELDS.len() + i,
+                T::WGSL_VERTEX_FIELDS[i]
+            ));
+            i += 1;
+        }
+
+        unwrap!(writec!(
+            w,
+            "@location({}) depth: f32,",
+            1 + V::WGSL_VERTEX_FIELDS.len() + T::WGSL_VERTEX_FIELDS.len()
+        ));
+
+        unwrap!(writec!(w, "}}"));
+
+        // Fragment
+        unwrap!(writec!(w, "struct Fragment {{"));
+        unwrap!(writec!(w, "@builtin(position) pos: vec4f,"));
+
+        let mut i = 0;
+        while i < V::WGSL_FRAGMENT_FIELDS.len() {
+            unwrap!(writec!(w, "@location({i}) {},", V::WGSL_FRAGMENT_FIELDS[i]));
+            i += 1;
+        }
+
+        unwrap!(writec!(w, "}}"));
+
+        // Vertex Main
+        unwrap!(writec!(
+            w,
+            "@vertex fn vs_main(input: Vertex) -> Fragment {{"
+        ));
+        unwrap!(writec!(w, "var output: Fragment;"));
+        unwrap!(writec!(w, "{}", V::WGSL_VERTEX_LOGIC));
+        unwrap!(writec!(w, "{}", T::WGSL_VERTEX_LOGIC));
+        unwrap!(writec!(w, "{}", C::WGSL_VERTEX_LOGIC));
+        unwrap!(writec!(w, "return output;"));
+        unwrap!(writec!(w, "}}"));
+
+        // Fragment Main
+        unwrap!(writec!(
+            w,
+            "@fragment fn fs_main(input: Fragment) -> @location(0) vec4f {{"
+        ));
+        unwrap!(writec!(w, "{}", V::WGSL_FRAGMENT_LOGIC));
+        unwrap!(writec!(w, "}}"));
+
+        *w
+    };
+
+    const SHADER: &str = { Self::SHADER_RAW.r().as_str() };
 }
 
 #[derive(AsStd140)]

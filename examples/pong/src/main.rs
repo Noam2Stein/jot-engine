@@ -22,7 +22,7 @@ const PLAYER_SPEED: s32 = s32::int(30);
 
 struct Pong {
     fixed_time: FixedTime<FPS>,
-    renderer: Renderer2D<3>,
+    renderer: Renderer2D<3, Colored, SVec2P, PosCamera2D>,
 
     state: PongState,
     input: Resolver<PongInput>,
@@ -73,7 +73,7 @@ impl Game for Pong {
             },
 
             fixed_time: FixedTime::new(),
-            renderer: Renderer2D::new(gpu),
+            renderer: Renderer2D::new(gpu, (), ()),
 
             input: Resolver::new(Bindings::<PongInput> {
                 left: Bindings::<Axis> {
@@ -136,12 +136,12 @@ impl Game for Pong {
     fn draw(&mut self, output: &GpuTexture<2>, gpu: &Gpu) {
         self.renderer.render(
             RenderInput2D {
-                cam: Camera2D {
+                cam: PosCamera2D {
                     center: SVec2::ZERO,
                     ortho_size: CAM_ORTHO_SIZE.as_f32(),
-                    background_color: BACKGROUND_COLOR.to_storage(),
                 },
                 quads: &self.state.renderer_quads(),
+                background_color: BACKGROUND_COLOR.to_storage(),
             },
             output,
             gpu,
@@ -188,23 +188,32 @@ impl PongState {
         }
     }
 
-    fn renderer_quads(&self) -> [Quad; 3] {
+    fn renderer_quads(&self) -> [Quad<Colored, SVec2P>; 3] {
         let left_player_quad = Quad {
-            rect: self.left_player.to_storage(),
+            transform: self.left_player.center().to_storage(),
+            visual: Colored {
+                size: self.left_player.size().map(s32::as_f32).to_storage(),
+                color: LEFT_PLAYER_COLOR,
+            },
             depth: 0.0,
-            color: LEFT_PLAYER_COLOR,
         };
 
         let right_player_quad = Quad {
-            rect: self.right_player.to_storage(),
+            transform: self.right_player.center().to_storage(),
+            visual: Colored {
+                size: self.right_player.size().map(s32::as_f32).to_storage(),
+                color: RIGHT_PLAYER_COLOR,
+            },
             depth: 0.0,
-            color: RIGHT_PLAYER_COLOR,
         };
 
         let ball_quad = Quad {
-            rect: self.ball.to_storage(),
+            transform: self.ball.center().to_storage(),
+            visual: Colored {
+                size: self.ball.size().map(s32::as_f32).to_storage(),
+                color: BALL_COLOR,
+            },
             depth: 0.0,
-            color: BALL_COLOR,
         };
 
         [left_player_quad, right_player_quad, ball_quad]

@@ -12,7 +12,7 @@ const FPS: u32 = 60;
 const TIME_STEP: s32 = s32::int(1).div(s32::int(FPS as i32));
 
 struct Dodger {
-    renderer: Renderer2D<100>,
+    renderer: Renderer2D<100, Colored, SVec2P, PosCamera2D>,
     input: Resolver<PlayerInput>,
     ecs: Ecs,
     schedule: Schedule,
@@ -71,7 +71,7 @@ impl Game for Dodger {
 
             fixed_time: FixedTime::new(),
 
-            renderer: Renderer2D::new(gpu),
+            renderer: Renderer2D::new(gpu, (), ()),
 
             input: Resolver::new(Bindings::<PlayerInput> {
                 x: Bindings::<Axis> {
@@ -138,16 +138,16 @@ impl Game for Dodger {
     fn draw(&mut self, output: &GpuTexture<2>, gpu: &Gpu) {
         self.renderer.render(
             RenderInput2D {
-                cam: Camera2D {
+                cam: PosCamera2D {
                     center: SVec2::ZERO,
                     ortho_size: 8.0,
-                    background_color: splat4(0.0),
                 },
                 quads: self
                     .ecs
                     .get_resource_mut::<HandleVec<_>>()
                     .unwrap()
                     .as_slice(),
+                background_color: splat4(0.0),
             },
             output,
             gpu,
@@ -155,9 +155,14 @@ impl Game for Dodger {
     }
 }
 
-fn update_quads(query: Query<(&Body, &mut Handle<Quad>)>, quads: Res<HandleVec<Quad>>) {
+fn update_quads(
+    query: Query<(&Body, &mut Handle<Quad<Colored, SVec2P>>)>,
+    quads: Res<HandleVec<Quad<Colored, SVec2P>>>,
+) {
     for (body, mut quad_handle) in query {
-        quads.get_mut(&mut quad_handle).rect = body.rect.to_storage();
+        quads.get_mut(&mut quad_handle).transform = body.rect.center().to_storage();
+        quads.get_mut(&mut quad_handle).visual.size =
+            body.rect.size().map(s32::as_f32).to_storage();
     }
 }
 
@@ -196,7 +201,7 @@ fn update_kill(
 
 fn update_spawner(
     mut spawner: ResMut<Spawner>,
-    mut quads: ResMut<HandleVec<Quad>>,
+    mut quads: ResMut<HandleVec<Quad<Colored, SVec2P>>>,
     mut commands: Commands,
 ) {
     if spawner.wait == 0 {
@@ -207,12 +212,12 @@ fn update_spawner(
 
         commands.spawn((
             quads.insert(Quad {
-                color: splat4p(0.8).with_x(1.0),
+                visual: Colored {
+                    size: splat2p(1.0),
+                    color: splat4p(0.8).with_x(1.0),
+                },
                 depth: 0.0,
-                rect: Rectangle::from_center_size(
-                    vec2!(s32::int(0), s32::int(-6)),
-                    splat2(s32::int(1)),
-                ),
+                transform: vec2p!(s32::int(0), s32::int(-6)),
             }),
             Body {
                 rect: Rectangle::from_center_size(
@@ -253,12 +258,12 @@ fn new_ecs() -> Ecs {
 
     ecs.spawn((
         quads.insert(Quad {
-            color: splat4p(1.0),
+            visual: Colored {
+                size: splat2p(1.0),
+                color: splat4p(1.0),
+            },
+            transform: vec2p!(s32::int(0), s32::int(-6)),
             depth: 0.0,
-            rect: Rectangle::from_center_size(
-                vec2!(s32::int(0), s32::int(-6)),
-                splat2(s32::int(1)),
-            ),
         }),
         Body {
             rect: Rectangle::from_center_size(

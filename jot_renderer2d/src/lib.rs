@@ -4,12 +4,11 @@ use jot_math::*;
 mod cam;
 mod input;
 mod renderer;
-mod sprite;
+mod shader;
 mod transform;
+mod visual;
 pub use cam::*;
 pub use input::*;
 pub use renderer::*;
-pub use sprite::*;
 pub use transform::*;
-
-mod shader;
+pub use visual::*;

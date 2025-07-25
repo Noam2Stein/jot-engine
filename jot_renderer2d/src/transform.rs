@@ -11,7 +11,7 @@ pub trait Transform2D: Debug + Copy + PartialEq {
     /// Declare vertex fields without location declaration.
     const WGSL_VERTEX_FIELDS: &[&str];
 
-    /// Declare uniforms, textures and such for the shader, at bind-group `1`.
+    /// Declare uniforms, textures and such for the shader, at bind-group `2`.
     const WGSL_GLOBALS: &[&str];
 
     /// Inserted into the vertex function.
@@ -48,7 +48,7 @@ impl Transform2D for SVec2P {
     const WGSL_GLOBALS: &[&str] = &[];
 
     const WGSL_VERTEX_LOGIC: &str = "
-        let world_pos = vec2f(in.center + size * input.vertex_pos / 2) / 256.0;
+        let world_pos = vec2f(input.center) / 256.0 + size * vec2f(input.vertex_pos) / 2.0;
     ";
 
     fn create_bind_group_layout(gpu: &Gpu) -> wgpu::BindGroupLayout {
