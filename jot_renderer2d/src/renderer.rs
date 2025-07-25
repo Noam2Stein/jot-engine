@@ -400,8 +400,8 @@ impl<const QUAD_CAP: usize, V: Visual2D, T: Transform2D, C: Camera2D>
         }
     };
 
-    const SHADER_RAW: StrWriter<[u8; 1028]> = {
-        let w = &mut StrWriter::new([0; 1028]);
+    const SHADER_RAW: StrWriter<[u8; 2048]> = {
+        let w = &mut StrWriter::new([0; 2048]);
 
         // Aspect
         unwrap!(writec!(

@@ -1,5 +1,8 @@
 use std::{fmt::Debug, mem::offset_of};
 
+use crevice::std140::{AsStd140, Std140};
+use wgpu::util::DeviceExt;
+
 use super::*;
 
 pub trait Visual2D: Debug + Copy + PartialEq {
@@ -46,6 +49,12 @@ pub struct Sprite {
     pub texture_rect: URect2P,
 }
 
+#[derive(Debug, Clone)]
+pub struct SpriteResources {
+    pub texture: GpuTexture<2>,
+    pub pixels_per_unit: f32,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ColoredSprite {
     pub texture_rect: URect2P,
@@ -59,7 +68,7 @@ pub struct Colored {
 }
 
 impl Visual2D for Sprite {
-    type Resources = GpuTexture<2>;
+    type Resources = SpriteResources;
 
     const LAYOUT: &[wgpu::VertexAttribute] = &[wgpu::VertexAttribute {
         format: wgpu::VertexFormat::Uint32x4,
@@ -72,15 +81,16 @@ impl Visual2D for Sprite {
     const WGSL_FRAGMENT_FIELDS: &[&str] = &["uv: vec2f"];
 
     const WGSL_GLOBALS: &[&str] = &[
-        "@group(1) @binding(0) texture_: texture_2d<f32>;",
-        "@group(1) @binding(1) sampler_: sampler;",
-        "@group(1) @binding(2) pixels_per_unit: f32;",
+        "@group(1) @binding(0) var texture_: texture_2d<f32>;",
+        "@group(1) @binding(1) var sampler_: sampler;",
+        "@group(1) @binding(2) var<uniform> pixels_per_unit: f32;",
     ];
 
     const WGSL_VERTEX_LOGIC: &str = "
-        let zero_to_one_vertex_pos = (input.vertex_pos + vec2(1)) / 2;
+        let zero_to_one_vertex_pos = vec2u((input.vertex_pos + vec2(1))) / 2;
         let pixel_uv = input.texture_rect.xy + input.texture_rect.zw * zero_to_one_vertex_pos;
         output.uv = vec2f(pixel_uv) / vec2f(textureDimensions(texture_));
+        output.uv.y = 1.0 - output.uv.y;
 
         let size = vec2f(input.texture_rect.zw) / pixels_per_unit;
     ";
@@ -111,6 +121,16 @@ impl Visual2D for Sprite {
                         ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::NonFiltering),
                         visibility: wgpu::ShaderStages::FRAGMENT,
                     },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 2,
+                        count: None,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },
+                        visibility: wgpu::ShaderStages::VERTEX,
+                    },
                 ],
             })
     }
@@ -128,6 +148,7 @@ impl Visual2D for Sprite {
                     binding: 0,
                     resource: wgpu::BindingResource::TextureView(
                         &resources
+                            .texture
                             .color_view
                             .expect("tried to render a colorless texture"),
                     ),
@@ -140,6 +161,20 @@ impl Visual2D for Sprite {
                             ..Default::default()
                         },
                     )),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+                        buffer: &gpu
+                            .device
+                            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                                label: Some("Pixels Per Unit Buffer"),
+                                contents: resources.pixels_per_unit.as_std140().as_bytes(),
+                                usage: wgpu::BufferUsages::UNIFORM,
+                            }),
+                        offset: 0,
+                        size: None,
+                    }),
                 },
             ],
         })
@@ -170,8 +205,9 @@ impl Visual2D for ColoredSprite {
 
     const WGSL_VERTEX_LOGIC: &str = "
         let zero_to_one_vertex_pos = (input.vertex_pos + vec2(1)) / 2;
-        let pixel_uv = input.texture_rect.xy + input.texture_rect.zw * zero_to_one_vertex_pos;
+        let pixel_uv = vec2f(input.texture_rect.xy) + vec2f(input.texture_rect.zw) * zero_to_one_vertex_pos;
         output.uv = vec2f(pixel_uv) / vec2f(textureDimensions(texture_));
+        output.uv.y = 1.0 - output.uv.y;
 
         output.color = input.color;
 
