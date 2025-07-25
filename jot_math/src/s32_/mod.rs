@@ -7,6 +7,7 @@ use derive_more::{Add, AddAssign, Neg, Sub, SubAssign};
 
 use super::*;
 
+mod as_std;
 mod mat;
 mod rect;
 mod vec;
