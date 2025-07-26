@@ -1,0 +1,16 @@
+[package]
+edition = "2024"
+name    = "weird_map"
+version = "0.1.0"
+
+[dependencies]
+jot = { path = "../../jot", features = [
+    "chunk",
+    "fixed",
+    "game",
+    "renderer2d",
+    "scene",
+    "scheme",
+] }
+
+noise = "0.9.0"

@@ -88,6 +88,12 @@ impl s32 {
         Self((value * 256.0) as i32)
     }
 
+    pub const fn as_i32(self) -> i32 {
+        self.0 >> Self::FRACT_BITS
+    }
+    pub const fn as_u32(self) -> u32 {
+        self.as_i32() as u32
+    }
     pub const fn as_f32(self) -> f32 {
         (self.0 as f32) * Self::FRACT_SCALE_F32
     }

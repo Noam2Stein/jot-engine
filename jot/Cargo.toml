@@ -6,6 +6,7 @@ version = "0.1.0"
 [dependencies]
 jot_asset       = { path = "../jot_asset", optional = true }
 jot_camera      = { path = "../jot_camera", optional = true }
+jot_chunk       = { path = "../jot_chunk", optional = true }
 jot_collections = { path = "../jot_collections", optional = true }
 jot_ecs         = { path = "../jot_ecs", optional = true }
 jot_fixed       = { path = "../jot_fixed", optional = true }
@@ -17,11 +18,13 @@ jot_renderer2d  = { path = "../jot_renderer2d", optional = true }
 jot_scene       = { path = "../jot_scene", optional = true }
 jot_scheme      = { path = "../jot_scheme", optional = true }
 jot_window      = { path = "../jot_window", optional = true }
-macro_loop      = "0.4.1"
+
+macro_loop = "0.4.1"
 
 [features]
 asset       = [ "jot_asset" ]
 camera      = [ "jot_camera" ]
+chunk       = [ "jot_chunk", "math" ]
 collections = [ "jot_collections" ]
 ecs         = [ "jot_ecs" ]
 fixed       = [ "jot_fixed" ]
