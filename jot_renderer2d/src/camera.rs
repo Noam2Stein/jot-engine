@@ -4,7 +4,7 @@ use crevice::std140::AsStd140;
 
 use super::*;
 
-pub trait Camera2D: Debug + Copy + PartialEq + AsStd140 {
+pub trait Camera2D: CameraType + Debug + Copy + PartialEq + AsStd140 {
     /// Declare the camera struct's fields.
     const WGSL_FIELDS: &[&str];
 
@@ -20,17 +20,7 @@ pub trait Camera2D: Debug + Copy + PartialEq + AsStd140 {
     const WGSL_VERTEX_LOGIC: &str;
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, AsStd140)]
-pub struct PosCamera2D {
-    pub center: SVec2,
-    pub ortho_size: f32,
-}
-
-/// Acts as a camera with its center at `(0, 0)` and its ortho_size as `1.0`.
-#[derive(Debug, Clone, Copy, PartialEq, AsStd140)]
-pub struct NoCamera2D {}
-
-impl Camera2D for PosCamera2D {
+impl Camera2D for Pos2Camera {
     const WGSL_FIELDS: &[&str] = &["center: vec2i", "ortho_size: f32"];
 
     const WGSL_VERTEX_LOGIC: &str = "
@@ -40,7 +30,7 @@ impl Camera2D for PosCamera2D {
     ";
 }
 
-impl Camera2D for NoCamera2D {
+impl Camera2D for NoCamera {
     const WGSL_FIELDS: &[&str] = &[];
 
     const WGSL_VERTEX_LOGIC: &str = "

@@ -1,4 +1,7 @@
-use jot::{collections::*, fixed::*, game::*, gpu::*, input::*, math::*, renderer2d::*, scheme::*};
+use jot::{
+    camera::*, collections::*, fixed::*, game::*, gpu::*, input::*, math::*, renderer2d::*,
+    scheme::*,
+};
 
 fn main() {
     run::<Pong>();
@@ -22,7 +25,7 @@ const PLAYER_SPEED: s32 = s32::int(30);
 
 struct Pong {
     fixed_time: FixedTime<FPS>,
-    renderer: Renderer2D<3, Colored, SVec2P, PosCamera2D>,
+    renderer: Renderer2D<3, Colored, SVec2P, Pos2Camera>,
 
     state: PongState,
     input: Resolver<PongInput>,
@@ -136,7 +139,7 @@ impl GameType for Pong {
     fn draw(&mut self, output: &GpuTexture<2>, gpu: &Gpu) {
         self.renderer.render(
             RenderInput2D {
-                cam: PosCamera2D {
+                cam: Pos2Camera {
                     center: SVec2::ZERO,
                     ortho_size: CAM_ORTHO_SIZE.as_f32(),
                 },

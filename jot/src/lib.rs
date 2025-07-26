@@ -14,6 +14,7 @@ macro_loop! {
         ecs,
         asset,
         scene,
+        camera,
     ] {
         #[cfg(feature = @[@feature => str])]
         pub mod @feature {

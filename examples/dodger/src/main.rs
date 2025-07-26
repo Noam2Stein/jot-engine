@@ -1,5 +1,6 @@
 use jot::{
-    collections::*, ecs::*, fixed::*, game::*, gpu::*, input::*, math::*, renderer2d::*, scheme::*,
+    camera::*, collections::*, ecs::*, fixed::*, game::*, gpu::*, input::*, math::*, renderer2d::*,
+    scheme::*,
 };
 use rand::{RngCore, SeedableRng};
 use rand_chacha::ChaCha20Rng;
@@ -12,7 +13,7 @@ const FPS: u32 = 60;
 const TIME_STEP: s32 = s32::int(1).div(s32::int(FPS as i32));
 
 struct Dodger {
-    renderer: Renderer2D<100, Colored, SVec2P, PosCamera2D>,
+    renderer: Renderer2D<100, Colored, SVec2P, Pos2Camera>,
     input: Resolver<PlayerInput>,
     ecs: Ecs,
     schedule: Schedule,
@@ -138,7 +139,7 @@ impl GameType for Dodger {
     fn draw(&mut self, output: &GpuTexture<2>, gpu: &Gpu) {
         self.renderer.render(
             RenderInput2D {
-                cam: PosCamera2D {
+                cam: Pos2Camera {
                     center: SVec2::ZERO,
                     ortho_size: 8.0,
                 },

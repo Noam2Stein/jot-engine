@@ -1,4 +1,4 @@
-use jot::{game::*, gpu::*, math::*, renderer2d::*};
+use jot::{camera::*, game::*, gpu::*, math::*, renderer2d::*};
 
 #[allow(unused)]
 mod assets;
@@ -8,7 +8,7 @@ fn main() {
 }
 
 struct FlappyBird {
-    renderer: Renderer2D<1, Sprite, SVec2P, PosCamera2D>,
+    renderer: Renderer2D<1, Sprite, SVec2P, Pos2Camera>,
 }
 
 impl GameType for FlappyBird {
@@ -36,7 +36,7 @@ impl GameType for FlappyBird {
     fn draw(&mut self, output: &jot::gpu::GpuTexture<2>, gpu: &jot::gpu::Gpu) {
         self.renderer.render(
             RenderInput2D {
-                cam: PosCamera2D {
+                cam: Pos2Camera {
                     center: splat2(s32::ZERO),
                     ortho_size: 8.0,
                 },

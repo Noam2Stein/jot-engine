@@ -186,8 +186,15 @@ impl s32 {
         Self(self.0.abs())
     }
 
-    pub const fn move_towards(self, target: Self, max_delta: Self) -> Self {
-        target.clamp(Self(self.0 + max_delta.0), Self(self.0 - max_delta.0))
+    pub const fn lerp(self, other: Self, t: Self) -> Self {
+        self.lerp_unclamped(other, t.clamp(Self::ZERO, Self::ONE))
+    }
+    pub const fn lerp_unclamped(self, other: Self, t: Self) -> Self {
+        self.add(other.sub(self).mul(t))
+    }
+
+    pub const fn moved_towards(self, target: Self, max_delta: Self) -> Self {
+        target.clamp(self.sub(max_delta), self.add(max_delta))
     }
 }
 

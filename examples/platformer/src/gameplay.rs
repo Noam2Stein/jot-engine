@@ -14,6 +14,8 @@ pub struct GameplayScene {
     input: Resolver<Input>,
     fixed_time: FixedTime<FPS>,
 
+    cam: Shake<DirectFollow<Pos2Camera>>,
+
     player_pos: SVec2,
     quads: Vec<Quad>,
 }
@@ -24,6 +26,8 @@ impl GameplayScene {
             renderer: Renderer::new(gpu, (), ()),
             input: Resolver::new(Input::default_bindings()),
             fixed_time: FixedTime::new(),
+
+            cam: Shake::new(DirectFollow::new(SVec2::ZERO, 10.0)),
 
             player_pos: SVec2::ZERO,
             quads: {
@@ -66,6 +70,13 @@ impl SceneType for GameplayScene {
             let input = self.input.step();
 
             self.player_pos += vec2!(input.x.as_s32(), input.y.as_s32()) * s32::int(10) * TIME_STEP;
+            self.cam.target_moved(self.player_pos);
+
+            if input.jump.is_triggered {
+                self.cam.shake(ShakeDesc::HEAVY);
+            }
+
+            self.cam.update(TIME_STEP);
 
             SceneFlow::Continue
         })
@@ -97,10 +108,7 @@ impl SceneType for GameplayScene {
         self.renderer.render(
             RenderInput {
                 quads: &self.quads,
-                cam: PosCamera2D {
-                    center: self.player_pos,
-                    ortho_size: 12.0,
-                },
+                cam: self.cam.inner(),
                 background_color: vec4!(0.1, 0.2, 0.3, 0.0),
             },
             output,

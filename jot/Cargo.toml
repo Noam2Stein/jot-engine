@@ -5,6 +5,7 @@ version = "0.1.0"
 
 [dependencies]
 jot_asset       = { path = "../jot_asset", optional = true }
+jot_camera      = { path = "../jot_camera", optional = true }
 jot_collections = { path = "../jot_collections", optional = true }
 jot_ecs         = { path = "../jot_ecs", optional = true }
 jot_fixed       = { path = "../jot_fixed", optional = true }
@@ -20,6 +21,7 @@ macro_loop      = "0.4.1"
 
 [features]
 asset       = [ "jot_asset" ]
+camera      = [ "jot_camera" ]
 collections = [ "jot_collections" ]
 ecs         = [ "jot_ecs" ]
 fixed       = [ "jot_fixed" ]
@@ -27,7 +29,7 @@ game        = [ "gpu", "input", "jot_game", "math" ]
 gpu         = [ "jot_gpu", "math" ]
 input       = [ "jot_input", "math" ]
 math        = [ "jot_math" ]
-renderer2d  = [ "gpu", "jot_renderer2d" ]
+renderer2d  = [ "camera", "gpu", "jot_renderer2d" ]
 scene       = [ "game", "jot_scene" ]
 scheme      = [ "collections", "input", "jot_scheme", "math" ]
 window      = [ "input", "jot_window" ]
