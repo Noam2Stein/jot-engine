@@ -2,7 +2,7 @@ use std::{iter::once, sync::Arc, time::Instant};
 
 use super::*;
 
-pub fn run<A: Game>() {
+pub fn run<A: GameType>() {
     let event_loop = EventLoop::new().unwrap();
 
     let mut game_runner = GameRunner::<A>::Uninit;
@@ -10,12 +10,12 @@ pub fn run<A: Game>() {
     event_loop.run_app(&mut game_runner).unwrap();
 }
 
-enum GameRunner<G: Game> {
+enum GameRunner<G: GameType> {
     Uninit,
     Init(InitGameRunner<G>),
     Exited,
 }
-struct InitGameRunner<G: Game> {
+struct InitGameRunner<G: GameType> {
     game: G,
     gpu: Gpu,
     window: Arc<Window>,
@@ -25,7 +25,7 @@ struct InitGameRunner<G: Game> {
     instant: Instant,
 }
 
-impl<G: Game> ApplicationHandler for GameRunner<G> {
+impl<G: GameType> ApplicationHandler for GameRunner<G> {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         match self {
             GameRunner::Uninit => *self = GameRunner::Init(InitGameRunner::new(event_loop)),
@@ -147,7 +147,7 @@ impl<G: Game> ApplicationHandler for GameRunner<G> {
     }
 }
 
-impl<G: Game> InitGameRunner<G> {
+impl<G: GameType> InitGameRunner<G> {
     fn new(event_loop: &ActiveEventLoop) -> Self {
         let window = event_loop
             .create_window(WindowAttributes::default().with_title(G::NAME))

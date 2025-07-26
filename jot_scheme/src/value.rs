@@ -48,7 +48,7 @@ mod private {
         Value(ValueCode),
     }
 
-    impl Input for Value {
+    impl InputType for Value {
         type Bindings = ValueBindings;
         type ResolverState = ValueResolver;
 

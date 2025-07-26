@@ -1,15 +1,15 @@
 use jot::{game::*, gpu::*, input::*, math::*, scene::*};
 
 fn main() {
-    run::<MyGame>();
+    run::<Game>();
 }
 
-struct MyGame {
-    scene_runner: SceneRunner<MySceneEnum>,
+struct Game {
+    scene_runner: SceneRunner<SceneEnum>,
 }
 
-#[derive(SceneEnum)]
-enum MySceneEnum {
+#[derive(SceneEnumType)]
+enum SceneEnum {
     Red(RedScene),
     Blue(BlueScene),
 }
@@ -18,12 +18,12 @@ struct RedScene {}
 
 struct BlueScene {}
 
-impl Game for MyGame {
+impl GameType for Game {
     const NAME: &str = "Cool Scenes";
 
     fn new(_gpu: &Gpu) -> Self {
         Self {
-            scene_runner: SceneRunner::new(MySceneEnum::Red(RedScene {})),
+            scene_runner: SceneRunner::new(SceneEnum::Red(RedScene {})),
         }
     }
 
@@ -40,8 +40,8 @@ impl Game for MyGame {
     }
 }
 
-impl Scene for RedScene {
-    type SceneEnum = MySceneEnum;
+impl SceneType for RedScene {
+    type SceneEnum = SceneEnum;
 
     fn event(&mut self, event: &GameEvent, _gpu: &Gpu) -> SceneFlow<Self::SceneEnum> {
         if let GameEvent::Input(InputEvent {
@@ -54,7 +54,7 @@ impl Scene for RedScene {
                 }),
         }) = event
         {
-            SceneFlow::Swap(MySceneEnum::Blue(BlueScene {}))
+            SceneFlow::Swap(SceneEnum::Blue(BlueScene {}))
         } else {
             event.into()
         }
@@ -65,8 +65,8 @@ impl Scene for RedScene {
     }
 }
 
-impl Scene for BlueScene {
-    type SceneEnum = MySceneEnum;
+impl SceneType for BlueScene {
+    type SceneEnum = SceneEnum;
 
     fn event(&mut self, event: &GameEvent, _gpu: &Gpu) -> SceneFlow<Self::SceneEnum> {
         if let GameEvent::Input(InputEvent {
@@ -79,7 +79,7 @@ impl Scene for BlueScene {
                 }),
         }) = event
         {
-            SceneFlow::Swap(MySceneEnum::Red(RedScene {}))
+            SceneFlow::Swap(SceneEnum::Red(RedScene {}))
         } else {
             event.into()
         }

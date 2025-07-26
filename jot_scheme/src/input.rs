@@ -2,9 +2,9 @@ use std::{fmt::Debug, hash::Hash};
 
 use super::*;
 
-pub use jot_scheme_proc_macros::Input;
+pub use jot_scheme_proc_macros::InputType;
 
-pub trait Input: Debug + Copy + Eq + Hash + Default {
+pub trait InputType: Debug + Copy + Eq + Hash + Default {
     type Bindings: Debug + Clone + Eq + Default;
     type ResolverState: Debug + Clone + Default;
 
@@ -15,14 +15,14 @@ pub trait Input: Debug + Copy + Eq + Hash + Default {
     fn step(resolver: &mut Self::ResolverState) -> Self;
 }
 
-pub type Bindings<T> = <T as Input>::Bindings;
+pub type Bindings<T> = <T as InputType>::Bindings;
 
 #[derive(Debug, Clone, Default)]
-pub struct Resolver<T: Input> {
+pub struct Resolver<T: InputType> {
     state: T::ResolverState,
 }
 
-impl<T: Input> Resolver<T> {
+impl<T: InputType> Resolver<T> {
     pub fn new(bindings: T::Bindings) -> Self {
         Self {
             state: T::new_resolver(bindings),

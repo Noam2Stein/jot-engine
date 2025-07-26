@@ -37,13 +37,13 @@ struct PongState {
     ball_velocity: SVec2,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Input)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, InputType)]
 struct PongInput {
     pub left: Axis,
     pub right: Axis,
 }
 
-impl Game for Pong {
+impl GameType for Pong {
     const NAME: &str = "Pong";
 
     fn surface_desc() -> GpuSurfaceDesc {
@@ -188,8 +188,8 @@ impl PongState {
         }
     }
 
-    fn renderer_quads(&self) -> [Quad<Colored, SVec2P>; 3] {
-        let left_player_quad = Quad {
+    fn renderer_quads(&self) -> [Quad2D<Colored, SVec2P>; 3] {
+        let left_player_quad = Quad2D {
             transform: self.left_player.center().to_storage(),
             visual: Colored {
                 size: self.left_player.size().map(s32::as_f32).to_storage(),
@@ -198,7 +198,7 @@ impl PongState {
             depth: 0.0,
         };
 
-        let right_player_quad = Quad {
+        let right_player_quad = Quad2D {
             transform: self.right_player.center().to_storage(),
             visual: Colored {
                 size: self.right_player.size().map(s32::as_f32).to_storage(),
@@ -207,7 +207,7 @@ impl PongState {
             depth: 0.0,
         };
 
-        let ball_quad = Quad {
+        let ball_quad = Quad2D {
             transform: self.ball.center().to_storage(),
             visual: Colored {
                 size: self.ball.size().map(s32::as_f32).to_storage(),

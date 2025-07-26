@@ -56,7 +56,7 @@ mod private {
         Value(ValueCode),
     }
 
-    impl Input for Button {
+    impl InputType for Button {
         type Bindings = ButtonBindings;
         type ResolverState = ButtonResolver;
 

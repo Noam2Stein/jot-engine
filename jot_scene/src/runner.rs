@@ -1,10 +1,10 @@
 use super::*;
 
-pub struct SceneRunner<E: SceneEnum> {
+pub struct SceneRunner<E: SceneEnumType> {
     scene_enum: E,
 }
 
-impl<E: SceneEnum> SceneRunner<E> {
+impl<E: SceneEnumType> SceneRunner<E> {
     pub fn new(scene: E) -> Self {
         Self { scene_enum: scene }
     }

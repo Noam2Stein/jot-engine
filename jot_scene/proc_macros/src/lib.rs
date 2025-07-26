@@ -1,7 +1,7 @@
 use quote::{quote, quote_spanned};
 use syn::{Data, DataEnum, DeriveInput, Error, parse_macro_input, spanned::Spanned};
 
-#[proc_macro_derive(SceneEnum)]
+#[proc_macro_derive(SceneEnumType)]
 pub fn derive_scene_enum(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let DeriveInput {
         attrs: _,
@@ -19,7 +19,7 @@ pub fn derive_scene_enum(input: proc_macro::TokenStream) -> proc_macro::TokenStr
         Data::Enum(data) => data,
 
         _ => {
-            return Error::new(ident.span(), "`SceneEnum` is expected to be an enum")
+            return Error::new(ident.span(), "`SceneEnumType` is expected to be an enum")
                 .into_compile_error()
                 .into();
         }
@@ -59,7 +59,7 @@ pub fn derive_scene_enum(input: proc_macro::TokenStream) -> proc_macro::TokenStr
                     variant_field_type.span() =>
 
                     Self::#variant_ident { #variant_member: inner_scene }
-                        => <#variant_field_type as ::jot::scene::Scene>::update(inner_scene, delta_time, gpu),
+                        => <#variant_field_type as ::jot::scene::SceneType>::update(inner_scene, delta_time, gpu),
                 }
             });
 
@@ -73,7 +73,7 @@ pub fn derive_scene_enum(input: proc_macro::TokenStream) -> proc_macro::TokenStr
                 variant_field_type.span() =>
 
                 Self::#variant_ident { #variant_member: inner_scene }
-                    => <#variant_field_type as ::jot::scene::Scene>::event(inner_scene, event, gpu),
+                    => <#variant_field_type as ::jot::scene::SceneType>::event(inner_scene, event, gpu),
             }
         },
     );
@@ -88,15 +88,15 @@ pub fn derive_scene_enum(input: proc_macro::TokenStream) -> proc_macro::TokenStr
                 variant_field_type.span() =>
 
                 Self::#variant_ident { #variant_member: inner_scene }
-                    => <#variant_field_type as ::jot::scene::Scene>::draw(inner_scene, output, gpu),
+                    => <#variant_field_type as ::jot::scene::SceneType>::draw(inner_scene, output, gpu),
             }
         },
     );
 
     quote! {
-        impl #impl_generics ::jot::scene::SceneEnum for #ident #ty_generics #where_clause {}
+        impl #impl_generics ::jot::scene::SceneEnumType for #ident #ty_generics #where_clause {}
 
-        impl #impl_generics ::jot::scene::Scene for #ident #ty_generics #where_clause {
+        impl #impl_generics ::jot::scene::SceneType for #ident #ty_generics #where_clause {
             type SceneEnum = Self;
 
             fn update(&mut self, delta_time: f64, gpu: &::jot::gpu::Gpu) -> ::jot::scene::SceneFlow<Self::SceneEnum> {

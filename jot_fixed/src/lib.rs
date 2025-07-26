@@ -8,7 +8,7 @@ impl<const FPS: u32> FixedTime<FPS> {
         Self { accumulator: 0.0 }
     }
 
-    pub fn update<Flow: Eq + Default>(
+    pub fn update<Flow: PartialEq + Default>(
         &mut self,
         delta_time: f64,
         mut fixed_update: impl FnMut() -> Flow,

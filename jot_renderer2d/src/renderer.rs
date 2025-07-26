@@ -33,8 +33,6 @@ impl<const QUAD_CAP: usize, V: Visual2D, T: Transform2D, C: Camera2D>
         visual_resoureces: V::Resources,
         transform_resources: T::Resources,
     ) -> Self {
-        println!("{}", Self::SHADER);
-
         let vertex_buf = gpu
             .device
             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -54,7 +52,7 @@ impl<const QUAD_CAP: usize, V: Visual2D, T: Transform2D, C: Camera2D>
         let instance_buf = gpu.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Renderer2D Instance Buffer"),
             mapped_at_creation: false,
-            size: size_of::<[Quad<V, T>; QUAD_CAP]>() as u64,
+            size: size_of::<[Quad2D<V, T>; QUAD_CAP]>() as u64,
             usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
         });
 
@@ -353,7 +351,7 @@ impl<const QUAD_CAP: usize, V: Visual2D, T: Transform2D, C: Camera2D>
         while i < V::LAYOUT.len() {
             output[output_idx] = wgpu::VertexAttribute {
                 format: V::LAYOUT[i].format,
-                offset: offset_of!(Quad<V, T>, visual) as u64 + V::LAYOUT[i].offset,
+                offset: offset_of!(Quad2D<V, T>, visual) as u64 + V::LAYOUT[i].offset,
                 shader_location: output_idx as u32 + 1,
             };
             output_idx += 1;
@@ -365,7 +363,7 @@ impl<const QUAD_CAP: usize, V: Visual2D, T: Transform2D, C: Camera2D>
         while i < T::LAYOUT.len() {
             output[output_idx] = wgpu::VertexAttribute {
                 format: T::LAYOUT[i].format,
-                offset: offset_of!(Quad<V, T>, transform) as u64 + T::LAYOUT[i].offset,
+                offset: offset_of!(Quad2D<V, T>, transform) as u64 + T::LAYOUT[i].offset,
                 shader_location: output_idx as u32 + 1,
             };
             output_idx += 1;
@@ -376,7 +374,7 @@ impl<const QUAD_CAP: usize, V: Visual2D, T: Transform2D, C: Camera2D>
         // depth
         output[output_idx] = wgpu::VertexAttribute {
             format: wgpu::VertexFormat::Float32,
-            offset: offset_of!(Quad<V, T>, depth) as u64,
+            offset: offset_of!(Quad2D<V, T>, depth) as u64,
             shader_location: output_idx as u32 + 1,
         };
         #[allow(unused_assignments)]
@@ -389,7 +387,7 @@ impl<const QUAD_CAP: usize, V: Visual2D, T: Transform2D, C: Camera2D>
 
     const INSTANCE_LAYOUT: wgpu::VertexBufferLayout<'static> = {
         wgpu::VertexBufferLayout {
-            array_stride: size_of::<Quad<V, T>>() as u64,
+            array_stride: size_of::<Quad2D<V, T>>() as u64,
             step_mode: wgpu::VertexStepMode::Instance,
             attributes: &unsafe {
                 std::slice::from_raw_parts(

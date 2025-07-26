@@ -10,3 +10,5 @@ jot_scene_proc_macros = { path = "proc_macros" }
 jot_game = { path = "../jot_game" }
 jot_gpu  = { path = "../jot_gpu" }
 jot_math = { path = "../jot_math" }
+
+derive-where = "1.5.0"

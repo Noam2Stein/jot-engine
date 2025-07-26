@@ -4,12 +4,12 @@ use syn::{
     Data, DataStruct, DeriveInput, Error, Field, Visibility, parse_macro_input, spanned::Spanned,
 };
 
-#[proc_macro_derive(Input)]
+#[proc_macro_derive(InputType)]
 pub fn input_derive_macro(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     input_derive_macro_inner(input, quote! { ::jot::input }, quote! { ::jot::scheme })
 }
 
-#[proc_macro_derive(Input_Local)]
+#[proc_macro_derive(InputType_Local)]
 pub fn input_derive_macro_local(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     input_derive_macro_inner(input, quote! { ::jot_input }, quote! { crate })
 }
@@ -35,20 +35,20 @@ fn input_derive_macro_inner(
         Data::Struct(data) => data,
 
         Data::Enum(data) => {
-            return Error::new_spanned(data.enum_token, "cannot derive `Input` for enum")
+            return Error::new_spanned(data.enum_token, "cannot derive `InputType` for enum")
                 .into_compile_error()
                 .into();
         }
 
         Data::Union(data) => {
-            return Error::new_spanned(data.union_token, "cannot derive `Input` for union")
+            return Error::new_spanned(data.union_token, "cannot derive `InputType` for union")
                 .into_compile_error()
                 .into();
         }
     };
 
     if generics.params.len() > 0 || generics.where_clause.is_some() {
-        return Error::new_spanned(generics, "cannot derive `Input` for generic type")
+        return Error::new_spanned(generics, "cannot derive `InputType` for generic type")
             .into_compile_error()
             .into();
     }
@@ -60,7 +60,7 @@ fn input_derive_macro_inner(
             _ => {
                 return Error::new_spanned(
                     field,
-                    "cannot derive `Input` for struct with private fields",
+                    "cannot derive `InputType` for struct with private fields",
                 )
                 .into_compile_error()
                 .into();
@@ -175,7 +175,6 @@ fn input_derive_macro_inner(
         .collect::<Vec<_>>();
 
     quote! {
-
         mod #private_mod_name {
             use super::*;
 
@@ -189,7 +188,7 @@ fn input_derive_macro_inner(
                 #resolver_fields,
             )*}
 
-            impl #jot_scheme::Input for #ident {
+            impl #jot_scheme::InputType for #ident {
                 type Bindings = #bindings_name;
                 type ResolverState = #resolver_name;
 

@@ -1,4 +1,4 @@
-use jot::game::{Game, run};
+use jot::game::{GameType, run};
 
 fn main() {
     run::<EmptyGame>();
@@ -6,7 +6,7 @@ fn main() {
 
 struct EmptyGame {}
 
-impl Game for EmptyGame {
+impl GameType for EmptyGame {
     const NAME: &str = "Empty Game";
 
     fn new(_gpu: &jot::gpu::Gpu) -> Self {

@@ -11,7 +11,7 @@ struct FlappyBird {
     renderer: Renderer2D<1, Sprite, SVec2P, PosCamera2D>,
 }
 
-impl Game for FlappyBird {
+impl GameType for FlappyBird {
     const NAME: &str = "Flappy Bird";
 
     fn surface_desc() -> jot::gpu::GpuSurfaceDesc {
@@ -40,7 +40,7 @@ impl Game for FlappyBird {
                     center: splat2(s32::ZERO),
                     ortho_size: 8.0,
                 },
-                quads: &[Quad {
+                quads: &[Quad2D {
                     depth: 0.0,
                     transform: vec2p!(s32::ZERO, s32::ZERO),
                     visual: Sprite {

@@ -1,6 +1,6 @@
 use super::*;
 
-pub trait Game {
+pub trait GameType {
     const NAME: &str;
 
     fn surface_desc() -> GpuSurfaceDesc {

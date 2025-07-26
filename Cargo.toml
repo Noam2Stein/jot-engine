@@ -2,7 +2,7 @@
 
 members = [ "examples/cool_scenes",
     "examples/dodger",
-    "examples/empty", "examples/flappy_bird",
+    "examples/empty", "examples/flappy_bird", "examples/platformer",
     "examples/pong",
     "jot", "jot_asset",
     "jot_collections",

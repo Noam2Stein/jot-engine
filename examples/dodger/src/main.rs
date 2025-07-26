@@ -19,7 +19,7 @@ struct Dodger {
     fixed_time: FixedTime<FPS>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Input, Resource)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, InputType, Resource)]
 struct PlayerInput {
     pub x: Axis,
 }
@@ -55,7 +55,7 @@ enum DodgerFlow {
     Restart,
 }
 
-impl Game for Dodger {
+impl GameType for Dodger {
     const NAME: &str = "Empty Game";
 
     fn surface_desc() -> GpuSurfaceDesc {
@@ -156,8 +156,8 @@ impl Game for Dodger {
 }
 
 fn update_quads(
-    query: Query<(&Body, &mut Handle<Quad<Colored, SVec2P>>)>,
-    quads: Res<HandleVec<Quad<Colored, SVec2P>>>,
+    query: Query<(&Body, &mut Handle<Quad2D<Colored, SVec2P>>)>,
+    quads: Res<HandleVec<Quad2D<Colored, SVec2P>>>,
 ) {
     for (body, mut quad_handle) in query {
         quads.get_mut(&mut quad_handle).transform = body.rect.center().to_storage();
@@ -201,7 +201,7 @@ fn update_kill(
 
 fn update_spawner(
     mut spawner: ResMut<Spawner>,
-    mut quads: ResMut<HandleVec<Quad<Colored, SVec2P>>>,
+    mut quads: ResMut<HandleVec<Quad2D<Colored, SVec2P>>>,
     mut commands: Commands,
 ) {
     if spawner.wait == 0 {
@@ -211,7 +211,7 @@ fn update_spawner(
         let x = x as i32 - 8 * 2;
 
         commands.spawn((
-            quads.insert(Quad {
+            quads.insert(Quad2D {
                 visual: Colored {
                     size: splat2p(1.0),
                     color: splat4p(0.8).with_x(1.0),
@@ -257,7 +257,7 @@ fn new_ecs() -> Ecs {
     let mut quads = HandleVec::with_capacity(100);
 
     ecs.spawn((
-        quads.insert(Quad {
+        quads.insert(Quad2D {
             visual: Colored {
                 size: splat2p(1.0),
                 color: splat4p(1.0),

@@ -1,8 +1,8 @@
-use jot_scheme_proc_macros::Input_Local;
+use jot_scheme_proc_macros::InputType_Local;
 
 use super::*;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Input_Local)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, InputType_Local)]
 pub struct Axis {
     pub positive: Value,
     pub negative: Value,
