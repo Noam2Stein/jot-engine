@@ -1,24 +1,23 @@
-macro_rules! modules {
-    ($($mod:ident), * $(,)?) => {$(
-        paste::paste! {
-            #[cfg(feature = "" $mod)]
-            pub mod $mod {
-                pub use [<jot_ $mod>]::*;
-            }
-        }
-    )*};
-}
+use jot_math::macro_loop;
 
-modules! {
-    game,
-    gpu,
-    input,
-    math,
-    window,
-    renderer2d,
-    fixed,
-    scheme,
-    collections,
-    ecs,
-    asset,
+macro_loop! {
+    @for feature in [
+        game,
+        gpu,
+        input,
+        math,
+        window,
+        renderer2d,
+        fixed,
+        scheme,
+        collections,
+        ecs,
+        asset,
+        scene,
+    ] {
+        #[cfg(feature = @[@feature => str])]
+        pub mod @feature {
+            pub use @[jot_ @feature]::*;
+        }
+    }
 }

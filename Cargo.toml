@@ -1,6 +1,6 @@
 [workspace]
 
-members = [
+members = [ "examples/cool_scenes",
     "examples/dodger",
     "examples/empty", "examples/flappy_bird",
     "examples/pong",
@@ -12,7 +12,7 @@ members = [
     "jot_gpu",
     "jot_input",
     "jot_math",
-    "jot_renderer2d",
+    "jot_renderer2d", "jot_scene",
     "jot_scheme",
     "jot_window",
 ]
