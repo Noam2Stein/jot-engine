@@ -97,7 +97,7 @@ impl SceneType for GameplayScene {
             RenderInput {
                 quads: self.quads.as_slice(),
                 cam: self.cam.inner(),
-                background_color: vec4!(0.1, 0.2, 0.3, 0.0),
+                background_color: Some(vec4!(0.1, 0.2, 0.3, 0.0)),
             },
             output,
             gpu,

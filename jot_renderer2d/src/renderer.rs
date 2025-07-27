@@ -6,10 +6,8 @@ use wgpu::util::DeviceExt;
 
 use super::*;
 
-pub struct Renderer2D<const QUAD_CAP: usize, V: Visual2D, T: Transform2D, C: Camera2D> {
-    vertex_buf: wgpu::Buffer,
-    index_buf: wgpu::Buffer,
-    instance_buf: wgpu::Buffer,
+pub struct Renderer2D<V: Visual2D, T: Transform2D, C: Camera2D> {
+    shared: SharedResources2D,
 
     aspect_buf: wgpu::Buffer,
     cam_buf: Option<wgpu::Buffer>,
@@ -25,37 +23,12 @@ pub struct Renderer2D<const QUAD_CAP: usize, V: Visual2D, T: Transform2D, C: Cam
     _c: PhantomData<C>,
 }
 
-impl<const QUAD_CAP: usize, V: Visual2D, T: Transform2D, C: Camera2D>
-    Renderer2D<QUAD_CAP, V, T, C>
-{
+impl<V: Visual2D, T: Transform2D, C: Camera2D> Renderer2D<V, T, C> {
     pub fn new(
         gpu: &Gpu,
         visual_resoureces: V::Resources,
         transform_resources: T::Resources,
     ) -> Self {
-        let vertex_buf = gpu
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Renderer2D Vertex Buffer"),
-                contents: slice_bytes(&Self::VERTICIES),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
-
-        let index_buf = gpu
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Renderer2D Index Buffer"),
-                contents: slice_bytes(&Self::INDICIES),
-                usage: wgpu::BufferUsages::INDEX,
-            });
-
-        let instance_buf = gpu.device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("Renderer2D Instance Buffer"),
-            mapped_at_creation: false,
-            size: size_of::<[Quad2D<V, T>; QUAD_CAP]>() as u64,
-            usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-        });
-
         let aspect_buf = gpu.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Renderer2D Aspect Buffer"),
             mapped_at_creation: false,
@@ -225,7 +198,6 @@ impl<const QUAD_CAP: usize, V: Visual2D, T: Transform2D, C: Camera2D>
         Self {
             vertex_buf,
             index_buf,
-            instance_buf,
 
             aspect_buf,
             cam_buf,
@@ -255,26 +227,20 @@ impl<const QUAD_CAP: usize, V: Visual2D, T: Transform2D, C: Camera2D>
         }
 
         if input.quads.len() == 0 {
-            output.clear(Some(input.background_color), None, gpu);
-        }
-
-        for (batch_idx, batch) in input.quads.chunks(QUAD_CAP).enumerate() {
-            let batch_bytes = slice_bytes(batch);
-
-            gpu.queue.write_buffer(&self.instance_buf, 0, batch_bytes);
-
+            output.clear(input.background_color, None, gpu);
+        } else {
             let mut encoder = gpu
                 .device
                 .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                     label: Some("Renderer2D Command Encoder"),
                 });
 
-            let color_load = if batch_idx == 0 {
+            let color_load = if let Some(background_color) = input.background_color {
                 wgpu::LoadOp::Clear(wgpu::Color {
-                    r: input.background_color.x() as f64,
-                    g: input.background_color.y() as f64,
-                    b: input.background_color.z() as f64,
-                    a: input.background_color.w() as f64,
+                    r: background_color.x() as f64,
+                    g: background_color.y() as f64,
+                    b: background_color.z() as f64,
+                    a: background_color.w() as f64,
                 })
             } else {
                 wgpu::LoadOp::Load
@@ -310,34 +276,27 @@ impl<const QUAD_CAP: usize, V: Visual2D, T: Transform2D, C: Camera2D>
 
             pass.set_index_buffer(self.index_buf.slice(..), wgpu::IndexFormat::Uint16);
             pass.set_vertex_buffer(0, self.vertex_buf.slice(..));
-            pass.set_vertex_buffer(1, self.instance_buf.slice(..batch_bytes.len() as u64));
+            pass.set_vertex_buffer(
+                1,
+                input
+                    .quads
+                    .buf
+                    .inner
+                    .slice(input.quads.range.start as u64..input.quads.range.end as u64),
+            );
 
             pass.set_bind_group(0, &self.bind_group, &[]);
             pass.set_bind_group(1, &self.visual_bind_group, &[]);
             pass.set_bind_group(2, &self.transform_bind_group, &[]);
             pass.set_pipeline(&self.pipeline);
 
-            pass.draw_indexed(0..6, 0, 0..batch.len() as u32);
+            pass.draw_indexed(0..6, 0, 0..input.quads.len() as u32);
 
             drop(pass);
 
             gpu.queue.submit([encoder.finish()]);
         }
     }
-
-    const VERTICIES: [IVec2P; 4] = [vec2p!(-1, -1), vec2p!(1, -1), vec2p!(1, 1), vec2p!(-1, 1)];
-
-    const VERTEX_LAYOUT: wgpu::VertexBufferLayout<'static> = wgpu::VertexBufferLayout {
-        array_stride: size_of::<IVec2P>() as u64,
-        step_mode: wgpu::VertexStepMode::Vertex,
-        attributes: &[wgpu::VertexAttribute {
-            format: wgpu::VertexFormat::Sint32x2,
-            offset: 0,
-            shader_location: 0,
-        }],
-    };
-
-    const INDICIES: [u16; 6] = [0, 1, 2, 2, 3, 0];
 
     const INSTANCE_LAYOUT_ATTRIBUTES: [wgpu::VertexAttribute; 64] = {
         let mut output = [wgpu::VertexAttribute {

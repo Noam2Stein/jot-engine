@@ -144,7 +144,7 @@ impl GameType for Pong {
                     ortho_size: CAM_ORTHO_SIZE.as_f32(),
                 },
                 quads: &self.state.renderer_quads(),
-                background_color: BACKGROUND_COLOR.to_storage(),
+                background_color: Some(BACKGROUND_COLOR.to_storage()),
             },
             output,
             gpu,

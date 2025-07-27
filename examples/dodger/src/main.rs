@@ -13,7 +13,7 @@ const FPS: u32 = 60;
 const TIME_STEP: s32 = s32::int(1).div(s32::int(FPS as i32));
 
 struct Dodger {
-    renderer: Renderer2D<100, Colored, SVec2P, Pos2Camera>,
+    renderer: Renderer2D<100, Colored, Pos2D, Pos2Camera>,
     input: Resolver<PlayerInput>,
     ecs: Ecs,
     schedule: Schedule,
@@ -148,7 +148,7 @@ impl GameType for Dodger {
                     .get_resource_mut::<HandleVec<_>>()
                     .unwrap()
                     .as_slice(),
-                background_color: splat4(0.0),
+                background_color: Some(splat4(0.0)),
             },
             output,
             gpu,
@@ -157,11 +157,14 @@ impl GameType for Dodger {
 }
 
 fn update_quads(
-    query: Query<(&Body, &mut Handle<Quad2D<Colored, SVec2P>>)>,
-    quads: Res<HandleVec<Quad2D<Colored, SVec2P>>>,
+    query: Query<(&Body, &mut Handle<Quad2D<Colored, Pos2D>>)>,
+    quads: Res<HandleVec<Quad2D<Colored, Pos2D>>>,
 ) {
     for (body, mut quad_handle) in query {
-        quads.get_mut(&mut quad_handle).transform = body.rect.center().to_storage();
+        quads.get_mut(&mut quad_handle).transform = Pos2D {
+            pos: body.rect.center().to_storage(),
+        };
+
         quads.get_mut(&mut quad_handle).visual.size =
             body.rect.size().map(s32::as_f32).to_storage();
     }
@@ -202,7 +205,7 @@ fn update_kill(
 
 fn update_spawner(
     mut spawner: ResMut<Spawner>,
-    mut quads: ResMut<HandleVec<Quad2D<Colored, SVec2P>>>,
+    mut quads: ResMut<HandleVec<Quad2D<Colored, Pos2D>>>,
     mut commands: Commands,
 ) {
     if spawner.wait == 0 {
@@ -218,7 +221,9 @@ fn update_spawner(
                     color: splat4p(0.8).with_x(1.0),
                 },
                 depth: 0.0,
-                transform: vec2p!(s32::int(0), s32::int(-6)),
+                transform: Pos2D {
+                    pos: vec2p!(s32::int(0), s32::int(-6)),
+                },
             }),
             Body {
                 rect: Rectangle::from_center_size(
@@ -263,7 +268,9 @@ fn new_ecs() -> Ecs {
                 size: splat2p(1.0),
                 color: splat4p(1.0),
             },
-            transform: vec2p!(s32::int(0), s32::int(-6)),
+            transform: Pos2D {
+                pos: vec2p!(s32::int(0), s32::int(-6)),
+            },
             depth: 0.0,
         }),
         Body {

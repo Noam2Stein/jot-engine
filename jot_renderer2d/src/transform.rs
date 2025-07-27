@@ -34,7 +34,12 @@ pub trait Transform2D: Debug + Copy + PartialEq {
     ) -> wgpu::BindGroup;
 }
 
-impl Transform2D for SVec2P {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct Pos2D {
+    pub pos: SVec2P,
+}
+
+impl Transform2D for Pos2D {
     type Resources = ();
 
     const LAYOUT: &[wgpu::VertexAttribute] = &[wgpu::VertexAttribute {

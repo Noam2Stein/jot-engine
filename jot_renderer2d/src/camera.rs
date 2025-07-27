@@ -4,6 +4,11 @@ use crevice::std140::AsStd140;
 
 use super::*;
 
+#[derive(Debug, Clone)]
+pub struct CameraBuffer2D<C: Camera2D> {
+    inner: wgpu::Buffer,
+}
+
 pub trait Camera2D: CameraType + Debug + Copy + PartialEq + AsStd140 {
     /// Declare the camera struct's fields.
     const WGSL_FIELDS: &[&str];
