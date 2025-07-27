@@ -13,6 +13,6 @@ members = [ "examples/cool_scenes",
     "jot_input",
     "jot_math",
     "jot_renderer2d", "jot_scene",
-    "jot_scheme",
+    "jot_scheme", "jot_tilemap",
     "jot_window",
 ]
