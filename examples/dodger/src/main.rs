@@ -139,7 +139,7 @@ impl GameType for Dodger {
     fn draw(&mut self, output: &GpuTexture<2>, gpu: &Gpu) {
         self.renderer.render(
             RenderInput2D {
-                cam: Pos2Camera {
+                cam_bind_group: Pos2Camera {
                     center: SVec2::ZERO,
                     ortho_size: 8.0,
                 },

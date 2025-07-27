@@ -36,7 +36,7 @@ impl GameType for FlappyBird {
     fn draw(&mut self, output: &jot::gpu::GpuTexture<2>, gpu: &jot::gpu::Gpu) {
         self.renderer.render(
             RenderInput2D {
-                cam: Pos2Camera {
+                cam_bind_group: Pos2Camera {
                     center: splat2(s32::ZERO),
                     ortho_size: 8.0,
                 },

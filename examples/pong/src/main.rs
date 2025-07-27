@@ -166,7 +166,7 @@ impl GameType for Pong {
 
         self.renderer.render(
             RenderInput2D {
-                cam: &self.cam_bind_group,
+                cam_bind_group: &self.cam_bind_group,
                 background_color: Some(BACKGROUND_COLOR.to_storage()),
 
                 quads: self.quads_buf.slice(..),

@@ -163,7 +163,7 @@ impl<V: Visual2D, T: Transform2D, C: Camera2D> Renderer2D<V, T, C> {
             );
 
             pass.set_bind_group(0, &self.shared.bind_group.inner, &[]);
-            pass.set_bind_group(1, &input.cam.inner, &[]);
+            pass.set_bind_group(1, &input.cam_bind_group.inner, &[]);
             pass.set_bind_group(2, &input.visual_bind_group.inner, &[]);
             pass.set_bind_group(3, &input.transform_bind_group.inner, &[]);
             pass.set_pipeline(&self.pipeline);

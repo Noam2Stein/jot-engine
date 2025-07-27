@@ -4,7 +4,6 @@ name    = "jot_tilemap"
 version = "0.1.0"
 
 [dependencies]
-jot_collections = { path = "../jot_collections" }
-jot_gpu         = { path = "../jot_gpu" }
-jot_math        = { path = "../jot_math" }
-jot_renderer2d  = { path = "../jot_renderer2d" }
+jot_gpu        = { path = "../jot_gpu" }
+jot_math       = { path = "../jot_math" }
+jot_renderer2d = { path = "../jot_renderer2d" }

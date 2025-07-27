@@ -108,7 +108,7 @@ impl SceneType for GameplayScene {
         self.renderer.render(
             RenderInput {
                 quads: &self.quads,
-                cam: self.cam.inner(),
+                cam_bind_group: self.cam.inner(),
                 background_color: vec4!(0.1, 0.2, 0.3, 0.0),
             },
             output,

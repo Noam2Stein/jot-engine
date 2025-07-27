@@ -76,6 +76,46 @@ impl<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D> Tilemap<CHUNK_HEI
 
         Self { chunks }
     }
+
+    pub fn render<C: TilemapCamera2D>(
+        &self,
+        input: &TilemapRenderInput<CHUNK_HEIGHT, V, T, C>,
+        output: &GpuTexture<2>,
+        renderer: &Renderer2D<V, T, C>,
+        gpu: &Gpu,
+    ) {
+        let visible_columns = input.cam.visible_tile_columns();
+
+        for chunk_row in input.cam.visible_tile_chunks::<CHUNK_HEIGHT>() {
+            let chunk = match self.chunks.get(&chunk_row) {
+                Some(chunk) => chunk,
+                None => continue,
+            };
+
+            let start_column_idx = (visible_columns.start - chunk.first_column)
+                .clamp(0, chunk.column_start_indicies.len() as i32)
+                as usize;
+
+            let end_column_idx = (visible_columns.end - chunk.first_column)
+                .clamp(0, chunk.column_start_indicies.len() as i32)
+                as usize;
+
+            let tile_indicies = chunk.column_start_indicies[start_column_idx]
+                ..chunk.column_start_indicies[end_column_idx];
+
+            renderer.render(
+                RenderInput2D {
+                    cam_bind_group: input.cam_bind_group,
+                    background_color: input.background_color,
+                    quads: chunk.tiles_buf.slice(tile_indicies),
+                    visual_bind_group: input.visual_bind_group,
+                    transform_bind_group: input.transform_bind_group,
+                },
+                output,
+                gpu,
+            );
+        }
+    }
 }
 
 impl<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D> StructuredTiles<CHUNK_HEIGHT, V, T> {
