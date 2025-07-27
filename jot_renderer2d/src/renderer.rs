@@ -5,13 +5,15 @@ use crevice::std140::AsStd140;
 
 use super::*;
 
-pub struct Renderer2D<C: Camera2D> {
+pub struct Renderer2D<V: Visual2D, T: Transform2D, C: Camera2D> {
     shared: SharedResources2D,
     pipeline: wgpu::RenderPipeline,
+    _v: PhantomData<V>,
+    _t: PhantomData<T>,
     _c: PhantomData<C>,
 }
 
-impl<C: Camera2D> Renderer2D<C> {
+impl<V: Visual2D, T: Transform2D, C: Camera2D> Renderer2D<V, T, C> {
     pub fn new(gpu: &Gpu, shared: Option<SharedResources2D>) -> Self {
         let pipeline_layout = gpu
             .device
@@ -20,7 +22,8 @@ impl<C: Camera2D> Renderer2D<C> {
                 bind_group_layouts: &[
                     &GpuBuffer::<f32>::bind_group_layout(gpu),
                     &GpuBuffer::<Std140<C>>::bind_group_layout(gpu),
-                    // Visual and transform bind groups will be passed dynamically
+                    &V::Bindings::bind_group_layout(gpu),
+                    &T::Bindings::bind_group_layout(gpu),
                 ],
                 push_constant_ranges: &[],
             });
@@ -88,18 +91,13 @@ impl<C: Camera2D> Renderer2D<C> {
         Self {
             shared: shared.unwrap_or_else(|| SharedResources2D::new(gpu)),
             pipeline,
+            _v: PhantomData,
+            _t: PhantomData,
             _c: PhantomData,
         }
     }
 
-    pub fn render<V: Visual2D, T: Transform2D>(
-        &self,
-        input: RenderInput2D<V, T, C>,
-        visual_bindings: &GpuBindGroup<V::Bindings>,
-        transform_bindings: &GpuBindGroup<T::Bindings>,
-        output: &GpuTexture<2>,
-        gpu: &Gpu,
-    ) {
+    pub fn render(&self, input: RenderInput2D<V, T, C>, output: &GpuTexture<2>, gpu: &Gpu) {
         let aspect = output.size().x() as f32 / output.size().y() as f32;
         self.shared.aspect_buf.set(&aspect, gpu);
 
@@ -166,8 +164,8 @@ impl<C: Camera2D> Renderer2D<C> {
 
             pass.set_bind_group(0, &self.shared.bind_group.inner, &[]);
             pass.set_bind_group(1, &input.cam.inner, &[]);
-            pass.set_bind_group(2, &visual_bindings.inner, &[]);
-            pass.set_bind_group(3, &transform_bindings.inner, &[]);
+            pass.set_bind_group(2, &input.visual_bind_group.inner, &[]);
+            pass.set_bind_group(3, &input.transform_bind_group.inner, &[]);
             pass.set_pipeline(&self.pipeline);
 
             pass.draw_indexed(0..6, 0, 0..input.quads.len() as u32);
