@@ -27,6 +27,8 @@ struct Pong {
     renderer: Renderer2D<Colored, Pos2D, Pos2Camera>,
     quads_buf: GpuBuffer<[Quad2D<Colored, Pos2D>]>,
     cam_bind_group: GpuBindGroup<GpuBuffer<Std140<Pos2Camera>>>,
+    visual_bind_group: GpuBindGroup<()>,
+    transform_bind_group: GpuBindGroup<()>,
 
     fixed_time: FixedTime<FPS>,
     input: Resolver<PongInput>,
@@ -60,7 +62,7 @@ impl GameType for Pong {
 
     fn new(gpu: &Gpu) -> Self {
         Self {
-            renderer: Renderer2D::new(gpu, (), (), None),
+            renderer: Renderer2D::new(gpu, None),
             quads_buf: gpu.create_buffer_uninit_slice(GpuBufferUninitSliceDesc {
                 label: None,
                 usages: GpuBufferUsages::COPY_DST | GpuBufferUsages::VERTEX,
@@ -77,6 +79,8 @@ impl GameType for Pong {
                     .as_std140(),
                 }),
             ),
+            visual_bind_group: gpu.create_bind_group(&()),
+            transform_bind_group: gpu.create_bind_group(&()),
 
             state: PongState {
                 left_player: Rectangle::from_center_size(
@@ -163,8 +167,11 @@ impl GameType for Pong {
         self.renderer.render(
             RenderInput2D {
                 cam: &self.cam_bind_group,
-                quads: self.quads_buf.slice(..),
                 background_color: Some(BACKGROUND_COLOR.to_storage()),
+
+                quads: self.quads_buf.slice(..),
+                visual_bind_group: &self.visual_bind_group,
+                transform_bind_group: &self.transform_bind_group,
             },
             output,
             gpu,

@@ -5,25 +5,14 @@ use crevice::std140::AsStd140;
 
 use super::*;
 
-pub struct Renderer2D<V: Visual2D, T: Transform2D, C: Camera2D> {
+pub struct Renderer2D<C: Camera2D> {
     shared: SharedResources2D,
-
-    visual_bind_group: GpuBindGroup<V::Bindings>,
-    transform_bind_group: GpuBindGroup<T::Bindings>,
     pipeline: wgpu::RenderPipeline,
-
-    _v: PhantomData<V>,
-    _t: PhantomData<T>,
     _c: PhantomData<C>,
 }
 
-impl<V: Visual2D, T: Transform2D, C: Camera2D> Renderer2D<V, T, C> {
-    pub fn new(
-        gpu: &Gpu,
-        visual_bindings: impl GpuInto<GpuBindGroup<V::Bindings>>,
-        transform_bindings: impl GpuInto<GpuBindGroup<T::Bindings>>,
-        shared: Option<SharedResources2D>,
-    ) -> Self {
+impl<C: Camera2D> Renderer2D<C> {
+    pub fn new(gpu: &Gpu, shared: Option<SharedResources2D>) -> Self {
         let pipeline_layout = gpu
             .device
             .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -31,8 +20,7 @@ impl<V: Visual2D, T: Transform2D, C: Camera2D> Renderer2D<V, T, C> {
                 bind_group_layouts: &[
                     &GpuBuffer::<f32>::bind_group_layout(gpu),
                     &GpuBuffer::<Std140<C>>::bind_group_layout(gpu),
-                    &V::Bindings::bind_group_layout(gpu),
-                    &T::Bindings::bind_group_layout(gpu),
+                    // Visual and transform bind groups will be passed dynamically
                 ],
                 push_constant_ranges: &[],
             });
@@ -99,18 +87,19 @@ impl<V: Visual2D, T: Transform2D, C: Camera2D> Renderer2D<V, T, C> {
 
         Self {
             shared: shared.unwrap_or_else(|| SharedResources2D::new(gpu)),
-
-            visual_bind_group: visual_bindings.gpu_into(gpu),
-            transform_bind_group: transform_bindings.gpu_into(gpu),
             pipeline,
-
-            _v: PhantomData,
-            _t: PhantomData,
             _c: PhantomData,
         }
     }
 
-    pub fn render(&self, input: RenderInput2D<V, T, C>, output: &GpuTexture<2>, gpu: &Gpu) {
+    pub fn render<V: Visual2D, T: Transform2D>(
+        &self,
+        input: RenderInput2D<V, T, C>,
+        visual_bindings: &GpuBindGroup<V::Bindings>,
+        transform_bindings: &GpuBindGroup<T::Bindings>,
+        output: &GpuTexture<2>,
+        gpu: &Gpu,
+    ) {
         let aspect = output.size().x() as f32 / output.size().y() as f32;
         self.shared.aspect_buf.set(&aspect, gpu);
 
@@ -177,8 +166,8 @@ impl<V: Visual2D, T: Transform2D, C: Camera2D> Renderer2D<V, T, C> {
 
             pass.set_bind_group(0, &self.shared.bind_group.inner, &[]);
             pass.set_bind_group(1, &input.cam.inner, &[]);
-            pass.set_bind_group(2, &self.visual_bind_group.inner, &[]);
-            pass.set_bind_group(3, &self.transform_bind_group.inner, &[]);
+            pass.set_bind_group(2, &visual_bindings.inner, &[]);
+            pass.set_bind_group(3, &transform_bindings.inner, &[]);
             pass.set_pipeline(&self.pipeline);
 
             pass.draw_indexed(0..6, 0, 0..input.quads.len() as u32);
