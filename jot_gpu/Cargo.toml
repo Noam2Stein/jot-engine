@@ -4,6 +4,8 @@ name    = "jot_gpu"
 version = "0.1.0"
 
 [dependencies]
+jot_gpu_proc_macros = { path = "proc_macros" }
+
 jot_math   = { path = "../jot_math" }
 jot_window = { path = "../jot_window" }
 

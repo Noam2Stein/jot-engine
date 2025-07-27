@@ -1,53 +1,50 @@
-use wgpu::util::DeviceExt;
-
 use super::*;
 
 #[derive(Debug, Clone)]
 pub struct SharedResources2D {
-    pub(super) vertex_buf: wgpu::Buffer,
-    pub(super) index_buf: wgpu::Buffer,
+    pub(super) vertex_buf: GpuBuffer<[IVec2P]>,
+    pub(super) index_buf: GpuBuffer<[u16]>,
+
+    pub(super) aspect_buf: GpuBuffer<f32>,
+    pub(super) bind_group: GpuBindGroup<GpuBuffer<f32>>,
 }
 
 impl SharedResources2D {
     pub fn new(gpu: &Gpu) -> Self {
         let vertex_buf = gpu
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Renderer2D Vertex Buffer"),
-                contents: slice_bytes(&Self::VERTICIES),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
+            .create_buffer(GpuBufferDesc {
+                label: Some("Renderer2D VertexBuffer"),
+                usages: GpuBufferUsages::VERTEX,
+                value: &Self::VERTICIES,
+            })
+            .into_slice();
 
         let index_buf = gpu
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Renderer2D Index Buffer"),
-                contents: slice_bytes(&Self::INDICIES),
-                usage: wgpu::BufferUsages::INDEX,
-            });
+            .create_buffer(GpuBufferDesc {
+                label: Some("Renderer2D IndexBuffer"),
+                usages: GpuBufferUsages::INDEX,
+                value: &Self::INDICIES,
+            })
+            .into_slice();
+
+        let aspect_buf = gpu.create_buffer_uninit(GpuBufferUninitDesc {
+            label: Some("Renderer2D Aspect Buffer"),
+            usages: GpuBufferUsages::COPY_DST | GpuBufferUsages::UNIFORM,
+        });
+
+        let bind_group = gpu.create_bind_group(&aspect_buf);
 
         Self {
             vertex_buf,
             index_buf,
+
+            aspect_buf,
+            bind_group,
         }
     }
 
     pub(super) const VERTICIES: [IVec2P; 4] =
         [vec2p!(-1, -1), vec2p!(1, -1), vec2p!(1, 1), vec2p!(-1, 1)];
 
-    pub(super) const VERTEX_LAYOUT: wgpu::VertexBufferLayout<'static> = wgpu::VertexBufferLayout {
-        array_stride: size_of::<IVec2P>() as u64,
-        step_mode: wgpu::VertexStepMode::Vertex,
-        attributes: &[wgpu::VertexAttribute {
-            format: wgpu::VertexFormat::Sint32x2,
-            offset: 0,
-            shader_location: 0,
-        }],
-    };
-
     pub(super) const INDICIES: [u16; 6] = [0, 1, 2, 2, 3, 0];
-}
-
-fn slice_bytes<T>(slice: &[T]) -> &[u8] {
-    unsafe { std::slice::from_raw_parts(slice.as_ptr() as *const u8, slice.len() * size_of::<T>()) }
 }

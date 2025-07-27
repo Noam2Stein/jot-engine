@@ -24,11 +24,14 @@ const BALL_SPEED: s32 = s32::int(10);
 const PLAYER_SPEED: s32 = s32::int(30);
 
 struct Pong {
+    renderer: Renderer2D<Colored, Pos2D, Pos2Camera>,
+    quads_buf: GpuBuffer<[Quad2D<Colored, Pos2D>]>,
+    cam_bind_group: GpuBindGroup<GpuBuffer<Std140<Pos2Camera>>>,
+
     fixed_time: FixedTime<FPS>,
-    renderer: Renderer2D<3, Colored, SVec2P, Pos2Camera>,
+    input: Resolver<PongInput>,
 
     state: PongState,
-    input: Resolver<PongInput>,
 }
 
 struct PongState {
@@ -57,6 +60,24 @@ impl GameType for Pong {
 
     fn new(gpu: &Gpu) -> Self {
         Self {
+            renderer: Renderer2D::new(gpu, (), (), None),
+            quads_buf: gpu.create_buffer_uninit_slice(GpuBufferUninitSliceDesc {
+                label: None,
+                usages: GpuBufferUsages::COPY_DST | GpuBufferUsages::VERTEX,
+                len: 3,
+            }),
+            cam_bind_group: gpu.create_bind_group(
+                &gpu.create_buffer(GpuBufferDesc {
+                    label: None,
+                    usages: GpuBufferUsages::UNIFORM,
+                    value: &Pos2Camera {
+                        center: SVec2::ZERO,
+                        ortho_size: CAM_ORTHO_SIZE.as_f32(),
+                    }
+                    .as_std140(),
+                }),
+            ),
+
             state: PongState {
                 left_player: Rectangle::from_center_size(
                     vec2!(
@@ -76,7 +97,6 @@ impl GameType for Pong {
             },
 
             fixed_time: FixedTime::new(),
-            renderer: Renderer2D::new(gpu, (), ()),
 
             input: Resolver::new(Bindings::<PongInput> {
                 left: Bindings::<Axis> {
@@ -137,13 +157,13 @@ impl GameType for Pong {
     }
 
     fn draw(&mut self, output: &GpuTexture<2>, gpu: &Gpu) {
+        self.quads_buf
+            .set_range(0, &self.state.renderer_quads(), gpu);
+
         self.renderer.render(
             RenderInput2D {
-                cam: Pos2Camera {
-                    center: SVec2::ZERO,
-                    ortho_size: CAM_ORTHO_SIZE.as_f32(),
-                },
-                quads: &self.state.renderer_quads(),
+                cam: &self.cam_bind_group,
+                quads: self.quads_buf.slice(..),
                 background_color: Some(BACKGROUND_COLOR.to_storage()),
             },
             output,
@@ -191,9 +211,11 @@ impl PongState {
         }
     }
 
-    fn renderer_quads(&self) -> [Quad2D<Colored, SVec2P>; 3] {
+    fn renderer_quads(&self) -> [Quad2D<Colored, Pos2D>; 3] {
         let left_player_quad = Quad2D {
-            transform: self.left_player.center().to_storage(),
+            transform: Pos2D {
+                pos: self.left_player.center().to_storage(),
+            },
             visual: Colored {
                 size: self.left_player.size().map(s32::as_f32).to_storage(),
                 color: LEFT_PLAYER_COLOR,
@@ -202,7 +224,9 @@ impl PongState {
         };
 
         let right_player_quad = Quad2D {
-            transform: self.right_player.center().to_storage(),
+            transform: Pos2D {
+                pos: self.right_player.center().to_storage(),
+            },
             visual: Colored {
                 size: self.right_player.size().map(s32::as_f32).to_storage(),
                 color: RIGHT_PLAYER_COLOR,
@@ -211,7 +235,9 @@ impl PongState {
         };
 
         let ball_quad = Quad2D {
-            transform: self.ball.center().to_storage(),
+            transform: Pos2D {
+                pos: self.ball.center().to_storage(),
+            },
             visual: Colored {
                 size: self.ball.size().map(s32::as_f32).to_storage(),
                 color: BALL_COLOR,

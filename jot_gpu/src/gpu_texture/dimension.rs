@@ -6,6 +6,7 @@ pub trait GpuTextureDimension {
     type Size: Debug + Construct;
 
     const TEXTURE_DIMENSION: wgpu::TextureDimension;
+    const TEXTURE_VIEW_DIMENSION: wgpu::TextureViewDimension;
 
     fn extents3d(size: Self::Size) -> wgpu::Extent3d;
 }
@@ -14,6 +15,7 @@ impl GpuTextureDimension for MaybeVecLen<1> {
     type Size = u32;
 
     const TEXTURE_DIMENSION: wgpu::TextureDimension = wgpu::TextureDimension::D1;
+    const TEXTURE_VIEW_DIMENSION: wgpu::TextureViewDimension = wgpu::TextureViewDimension::D1;
 
     fn extents3d(size: Self::Size) -> wgpu::Extent3d {
         wgpu::Extent3d {
@@ -28,6 +30,7 @@ impl GpuTextureDimension for MaybeVecLen<2> {
     type Size = UVec2P;
 
     const TEXTURE_DIMENSION: wgpu::TextureDimension = wgpu::TextureDimension::D2;
+    const TEXTURE_VIEW_DIMENSION: wgpu::TextureViewDimension = wgpu::TextureViewDimension::D2;
 
     fn extents3d(size: Self::Size) -> wgpu::Extent3d {
         wgpu::Extent3d {
@@ -42,6 +45,7 @@ impl GpuTextureDimension for MaybeVecLen<3> {
     type Size = UVec3P;
 
     const TEXTURE_DIMENSION: wgpu::TextureDimension = wgpu::TextureDimension::D3;
+    const TEXTURE_VIEW_DIMENSION: wgpu::TextureViewDimension = wgpu::TextureViewDimension::D3;
 
     fn extents3d(size: Self::Size) -> wgpu::Extent3d {
         wgpu::Extent3d {

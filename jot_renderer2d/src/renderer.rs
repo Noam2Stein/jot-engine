@@ -1,21 +1,15 @@
-use std::{marker::PhantomData, mem::offset_of, num::NonZeroU64};
+use std::{marker::PhantomData, mem::offset_of};
 
 use const_format::{StrWriter, unwrap, writec};
-use crevice::std140::{AsStd140, Std140};
-use wgpu::util::DeviceExt;
+use crevice::std140::AsStd140;
 
 use super::*;
 
 pub struct Renderer2D<V: Visual2D, T: Transform2D, C: Camera2D> {
     shared: SharedResources2D,
 
-    aspect_buf: wgpu::Buffer,
-    cam_buf: Option<wgpu::Buffer>,
-    bind_group: wgpu::BindGroup,
-
-    visual_bind_group: wgpu::BindGroup,
-    transform_bind_group: wgpu::BindGroup,
-
+    visual_bind_group: GpuBindGroup<V::Bindings>,
+    transform_bind_group: GpuBindGroup<T::Bindings>,
     pipeline: wgpu::RenderPipeline,
 
     _v: PhantomData<V>,
@@ -26,112 +20,20 @@ pub struct Renderer2D<V: Visual2D, T: Transform2D, C: Camera2D> {
 impl<V: Visual2D, T: Transform2D, C: Camera2D> Renderer2D<V, T, C> {
     pub fn new(
         gpu: &Gpu,
-        visual_resoureces: V::Resources,
-        transform_resources: T::Resources,
+        visual_bindings: impl GpuInto<GpuBindGroup<V::Bindings>>,
+        transform_bindings: impl GpuInto<GpuBindGroup<T::Bindings>>,
+        shared: Option<SharedResources2D>,
     ) -> Self {
-        let aspect_buf = gpu.device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("Renderer2D Aspect Buffer"),
-            mapped_at_creation: false,
-            size: size_of::<f32>() as u64,
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-        });
-
-        let cam_buf = if !C::WGSL_FIELDS.is_empty() {
-            Some(gpu.device.create_buffer(&wgpu::BufferDescriptor {
-                label: Some("Renderer2D Camera Buffer"),
-                mapped_at_creation: false,
-                size: size_of::<CameraUniform>() as u64,
-                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            }))
-        } else {
-            None
-        };
-
-        let aspect_layout_entry = wgpu::BindGroupLayoutEntry {
-            binding: 0,
-            ty: wgpu::BindingType::Buffer {
-                ty: wgpu::BufferBindingType::Uniform,
-                has_dynamic_offset: false,
-                min_binding_size: Some(NonZeroU64::new(size_of::<f32>() as u64).unwrap()),
-            },
-            count: None,
-            visibility: wgpu::ShaderStages::all(),
-        };
-
-        let bind_group_layout = if let Some(_) = &cam_buf {
-            gpu.device
-                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                    label: Some("Renderer2D Bind Group Layout"),
-                    entries: &[
-                        aspect_layout_entry,
-                        wgpu::BindGroupLayoutEntry {
-                            binding: 1,
-                            ty: wgpu::BindingType::Buffer {
-                                ty: wgpu::BufferBindingType::Uniform,
-                                has_dynamic_offset: false,
-                                min_binding_size: Some(
-                                    NonZeroU64::new(size_of::<CameraUniform>() as u64).unwrap(),
-                                ),
-                            },
-                            count: None,
-                            visibility: wgpu::ShaderStages::VERTEX,
-                        },
-                    ],
-                })
-        } else {
-            gpu.device
-                .create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-                    label: Some("Renderer2D Bind Group Layout"),
-                    entries: &[aspect_layout_entry],
-                })
-        };
-
-        let aspect_resource = wgpu::BindGroupEntry {
-            binding: 0,
-            resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
-                buffer: &aspect_buf,
-                offset: 0,
-                size: None,
-            }),
-        };
-
-        let bind_group = if let Some(cam_buf) = &cam_buf {
-            gpu.device.create_bind_group(&wgpu::BindGroupDescriptor {
-                label: Some("Renderer2D Bind Group"),
-                layout: &bind_group_layout,
-                entries: &[
-                    aspect_resource,
-                    wgpu::BindGroupEntry {
-                        binding: 1,
-                        resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
-                            buffer: &cam_buf,
-                            offset: 0,
-                            size: None,
-                        }),
-                    },
-                ],
-            })
-        } else {
-            gpu.device.create_bind_group(&wgpu::BindGroupDescriptor {
-                label: Some("Renderer2D Bind Group"),
-                layout: &bind_group_layout,
-                entries: &[aspect_resource],
-            })
-        };
-
-        let visual_bind_group_layout = V::create_bind_group_layout(gpu);
-        let visual_bind_group =
-            V::create_bind_group(visual_resoureces, &visual_bind_group_layout, gpu);
-
-        let transform_bind_group_layout = T::create_bind_group_layout(gpu);
-        let transform_bind_group =
-            T::create_bind_group(transform_resources, &transform_bind_group_layout, gpu);
-
         let pipeline_layout = gpu
             .device
             .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("Renderer2D Pipeline Layout"),
-                bind_group_layouts: &[&bind_group_layout, &visual_bind_group_layout],
+                bind_group_layouts: &[
+                    &GpuBuffer::<f32>::bind_group_layout(gpu),
+                    &GpuBuffer::<Std140<C>>::bind_group_layout(gpu),
+                    &V::Bindings::bind_group_layout(gpu),
+                    &T::Bindings::bind_group_layout(gpu),
+                ],
                 push_constant_ranges: &[],
             });
 
@@ -196,16 +98,10 @@ impl<V: Visual2D, T: Transform2D, C: Camera2D> Renderer2D<V, T, C> {
             });
 
         Self {
-            vertex_buf,
-            index_buf,
+            shared: shared.unwrap_or_else(|| SharedResources2D::new(gpu)),
 
-            aspect_buf,
-            cam_buf,
-            bind_group,
-
-            visual_bind_group,
-            transform_bind_group,
-
+            visual_bind_group: visual_bindings.gpu_into(gpu),
+            transform_bind_group: transform_bindings.gpu_into(gpu),
             pipeline,
 
             _v: PhantomData,
@@ -215,16 +111,8 @@ impl<V: Visual2D, T: Transform2D, C: Camera2D> Renderer2D<V, T, C> {
     }
 
     pub fn render(&self, input: RenderInput2D<V, T, C>, output: &GpuTexture<2>, gpu: &Gpu) {
-        gpu.queue.write_buffer(
-            &self.aspect_buf,
-            0,
-            slice_bytes(&[output.size().x() as f32 / output.size().y() as f32]),
-        );
-
-        if let Some(cam_buf) = &self.cam_buf {
-            gpu.queue
-                .write_buffer(cam_buf, 0, input.cam.as_std140().as_bytes());
-        }
+        let aspect = output.size().x() as f32 / output.size().y() as f32;
+        self.shared.aspect_buf.set(&aspect, gpu);
 
         if input.quads.len() == 0 {
             output.clear(input.background_color, None, gpu);
@@ -274,20 +162,23 @@ impl<V: Visual2D, T: Transform2D, C: Camera2D> Renderer2D<V, T, C> {
                 occlusion_query_set: None,
             });
 
-            pass.set_index_buffer(self.index_buf.slice(..), wgpu::IndexFormat::Uint16);
-            pass.set_vertex_buffer(0, self.vertex_buf.slice(..));
+            pass.set_index_buffer(
+                self.shared.index_buf.inner.as_ref().unwrap().slice(..),
+                wgpu::IndexFormat::Uint16,
+            );
+            pass.set_vertex_buffer(0, self.shared.vertex_buf.inner.as_ref().unwrap().slice(..));
             pass.set_vertex_buffer(
                 1,
-                input
-                    .quads
-                    .buf
-                    .inner
-                    .slice(input.quads.range.start as u64..input.quads.range.end as u64),
+                input.quads.buf.inner.as_ref().unwrap().slice(
+                    (input.quads.start * size_of::<Quad2D<V, T>>()) as u64
+                        ..(input.quads.end * size_of::<Quad2D<V, T>>()) as u64,
+                ),
             );
 
-            pass.set_bind_group(0, &self.bind_group, &[]);
-            pass.set_bind_group(1, &self.visual_bind_group, &[]);
-            pass.set_bind_group(2, &self.transform_bind_group, &[]);
+            pass.set_bind_group(0, &self.shared.bind_group.inner, &[]);
+            pass.set_bind_group(1, &input.cam.inner, &[]);
+            pass.set_bind_group(2, &self.visual_bind_group.inner, &[]);
+            pass.set_bind_group(3, &self.transform_bind_group.inner, &[]);
             pass.set_pipeline(&self.pipeline);
 
             pass.draw_indexed(0..6, 0, 0..input.quads.len() as u32);
@@ -297,6 +188,16 @@ impl<V: Visual2D, T: Transform2D, C: Camera2D> Renderer2D<V, T, C> {
             gpu.queue.submit([encoder.finish()]);
         }
     }
+
+    const VERTEX_LAYOUT: wgpu::VertexBufferLayout<'static> = wgpu::VertexBufferLayout {
+        array_stride: size_of::<IVec2P>() as u64,
+        step_mode: wgpu::VertexStepMode::Vertex,
+        attributes: &[wgpu::VertexAttribute {
+            format: wgpu::VertexFormat::Sint32x2,
+            offset: 0,
+            shader_location: 0,
+        }],
+    };
 
     const INSTANCE_LAYOUT_ATTRIBUTES: [wgpu::VertexAttribute; 64] = {
         let mut output = [wgpu::VertexAttribute {
@@ -379,7 +280,7 @@ impl<V: Visual2D, T: Transform2D, C: Camera2D> Renderer2D<V, T, C> {
             unwrap!(writec!(w, "}}"));
             unwrap!(writec!(
                 w,
-                "@group(0) @binding(1) var<uniform> cam: Camera;"
+                "@group(1) @binding(0) var<uniform> cam: Camera;"
             ));
         }
 
@@ -473,8 +374,4 @@ impl<V: Visual2D, T: Transform2D, C: Camera2D> Renderer2D<V, T, C> {
 struct CameraUniform {
     center: IVec2P,
     extents: FVec2P,
-}
-
-fn slice_bytes<T>(slice: &[T]) -> &[u8] {
-    unsafe { std::slice::from_raw_parts(slice.as_ptr() as *const u8, slice.len() * size_of::<T>()) }
 }

@@ -9,11 +9,12 @@ use wgpu::{
 use super::*;
 
 mod array;
+mod binding;
 pub use array::*;
 
 #[derive_where(Debug, Clone)]
 pub struct GpuBuffer<T: ?Sized> {
-    pub inner: wgpu::Buffer,
+    pub inner: Option<wgpu::Buffer>,
     _t: PhantomData<T>,
 }
 
@@ -35,31 +36,42 @@ pub type GpuBufferUsages = wgpu::BufferUsages;
 
 impl Gpu {
     pub fn create_buffer<T: ?Sized>(&self, desc: GpuBufferDesc<T>) -> GpuBuffer<T> {
-        GpuBuffer {
-            inner: self.device.create_buffer_init(&BufferInitDescriptor {
+        let size = size_of_val::<T>(desc.value);
+
+        let inner = if size == 0 {
+            None
+        } else {
+            Some(self.device.create_buffer_init(&BufferInitDescriptor {
                 label: desc.label,
                 usage: desc.usages,
                 contents: unsafe {
-                    std::slice::from_raw_parts(
-                        desc.value as *const _ as *const u8,
-                        size_of_val::<T>(desc.value),
-                    )
+                    std::slice::from_raw_parts(desc.value as *const _ as *const u8, size)
                 },
-            }),
+            }))
+        };
 
+        GpuBuffer {
+            inner,
             _t: PhantomData,
         }
     }
 
     pub fn create_buffer_uninit<T: Sized>(&self, desc: GpuBufferUninitDesc) -> GpuBuffer<T> {
-        GpuBuffer {
-            inner: self.device.create_buffer(&BufferDescriptor {
+        let size = size_of::<T>();
+
+        let inner = if size == 0 {
+            None
+        } else {
+            Some(self.device.create_buffer(&BufferDescriptor {
                 label: desc.label,
                 usage: desc.usages,
-                size: size_of::<T>() as u64,
+                size: size as u64,
                 mapped_at_creation: false,
-            }),
+            }))
+        };
 
+        GpuBuffer {
+            inner,
             _t: PhantomData,
         }
     }
@@ -70,8 +82,10 @@ impl<T: ?Sized> GpuBuffer<T> {
     where
         T: Sized,
     {
-        gpu.queue.write_buffer(&self.inner, 0, unsafe {
-            std::slice::from_raw_parts(value as *const _ as *const u8, size_of::<T>())
-        });
+        if let Some(inner) = &self.inner {
+            gpu.queue.write_buffer(inner, 0, unsafe {
+                std::slice::from_raw_parts(value as *const _ as *const u8, size_of::<T>())
+            });
+        }
     }
 }

@@ -10,5 +10,3 @@ jot_math   = { path = "../jot_math" }
 
 const_format = { version = "0.2.34", features = [ "fmt" ] }
 crevice      = "0.18.0"
-wgpu         = "25.0.1"
-wgsl-inline  = "0.2.1"

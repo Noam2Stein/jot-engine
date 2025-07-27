@@ -24,7 +24,7 @@ impl GameType for FlappyBird {
         Self {
             renderer: Renderer2D::new(
                 gpu,
-                SpriteResources {
+                SpriteBindings {
                     texture: assets::bird.load(gpu).get().clone(),
                     pixels_per_unit: 16.0,
                 },
