@@ -14,7 +14,9 @@ impl TilemapCamera2D for Pos2Camera {
         let right = self.center.x() + s32::from_f32(self.ortho_size * aspect);
 
         let start = left.floor().as_i32();
-        let end = right.ceil().as_i32();
+        let end_inclusive = right.ceil().as_i32();
+
+        let end = end_inclusive + 1;
 
         start..end
     }
@@ -24,7 +26,9 @@ impl TilemapCamera2D for Pos2Camera {
         let top = self.center.y() + s32::from_f32(self.ortho_size);
 
         let start = (bottom / s32::from_u32(CHUNK_HEIGHT)).floor().as_i32();
-        let end = (top / s32::from_u32(CHUNK_HEIGHT)).ceil().as_i32();
+        let end_inclusive = (top / s32::from_u32(CHUNK_HEIGHT)).ceil().as_i32();
+
+        let end = end_inclusive + 1;
 
         start..end
     }

@@ -79,11 +79,13 @@ impl<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D> Tilemap<CHUNK_HEI
                 let mut first_column = 0;
                 let mut columns = Vec::new();
 
-                for (tile_idx, tile) in chunk_tiles.iter().enumerate() {
+                for (tile_idx_in_chunk, tile) in chunk_tiles.iter().enumerate() {
+                    let tile_idx = chunk_range.start + tile_idx_in_chunk;
+
                     let tile_pos = tile.transform.tile_pos();
                     let tile_column = tile_pos.x();
 
-                    if tile_idx == 0 {
+                    if tile_idx_in_chunk == 0 {
                         first_column = tile_column;
                     }
 
@@ -99,6 +101,10 @@ impl<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D> Tilemap<CHUNK_HEI
                         });
                     }
                 }
+
+                columns.push(TilemapColumnInfo {
+                    start_idx: chunk_range.end,
+                });
 
                 let v = TilemapChunk {
                     first_column,
@@ -123,24 +129,10 @@ impl<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D> Tilemap<CHUNK_HEI
 
         let mut background_color = input.background_color;
 
-        renderer.render(
-            RenderInput2D {
-                cam_bind_group: input.cam_bind_group,
-                background_color,
-                quads: self.tile_buf.slice(..),
-                visual_bind_group: input.visual_bind_group,
-                transform_bind_group: input.transform_bind_group,
-            },
-            output,
-            gpu,
-        );
-
-        return;
-
         let visible_chunks = input.cam.visible_tile_chunks::<CHUNK_HEIGHT>(aspect);
         let visible_columns = input.cam.visible_tile_columns(aspect);
 
-        for chunk_row in self.chunks.keys() {
+        for chunk_row in visible_chunks {
             let chunk = match self.chunks.get(&chunk_row) {
                 Some(chunk) => chunk,
                 None => continue,
@@ -153,9 +145,6 @@ impl<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D> Tilemap<CHUNK_HEI
             let end_column_idx = (visible_columns.end - chunk.first_column)
                 .clamp(0, chunk.columns.len() as i32 - 1) as usize;
 
-            println!("start_column_idx: {}", start_column_idx);
-            println!("end_column_idx: {}", end_column_idx);
-
             let start_column = &chunk.columns[start_column_idx];
             let end_column = &chunk.columns[end_column_idx];
 
@@ -165,7 +154,7 @@ impl<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D> Tilemap<CHUNK_HEI
                 RenderInput2D {
                     cam_bind_group: input.cam_bind_group,
                     background_color,
-                    quads: self.tile_buf.slice(..),
+                    quads: self.tile_buf.slice(tile_indicies),
                     visual_bind_group: input.visual_bind_group,
                     transform_bind_group: input.transform_bind_group,
                 },
