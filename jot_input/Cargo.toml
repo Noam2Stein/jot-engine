@@ -4,6 +4,10 @@ name    = "jot_input"
 version = "0.1.0"
 
 [dependencies]
-gilrs    = "0.11.0"
 jot_math = { path = "../jot_math" }
-winit    = "0.30.9"
+
+gilrs = "0.11.0"
+tinyset = { git = "https://github.com/Noam2Stein/tinyset", features = [
+    "winit",
+] }
+winit = "0.30.9"

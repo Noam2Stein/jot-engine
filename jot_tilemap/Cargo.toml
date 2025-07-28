@@ -1,0 +1,10 @@
+[package]
+edition = "2024"
+name    = "jot_tilemap"
+version = "0.1.0"
+
+[dependencies]
+jot_camera     = { path = "../jot_camera" }
+jot_gpu        = { path = "../jot_gpu" }
+jot_math       = { path = "../jot_math" }
+jot_renderer2d = { path = "../jot_renderer2d" }

@@ -1,0 +1,6 @@
+#[allow(non_upper_case_globals)]
+pub const bird: ::jot::asset::AssetId<::jot::gpu::GpuTexture<2>> = unsafe {
+    ::jot::asset::AssetId::<
+        ::jot::gpu::GpuTexture<2>,
+    >::new_unchecked("C:/GitHub/jot-engine/examples/flappy_bird/assets/bird.png")
+};

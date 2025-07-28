@@ -1,0 +1,18 @@
+[package]
+edition = "2024"
+name    = "jot_asset"
+version = "0.1.0"
+
+[dependencies]
+jot_gpu  = { path = "../jot_gpu" }
+jot_math = { path = "../jot_math" }
+
+bitcode      = { version = "0.6.6", features = [ "serde" ] }
+derive-new   = "0.7.0"
+image        = { version = "0.25.6", features = [ "serde" ] }
+prettyplease = "0.2.36"
+proc-macro2  = "1.0.95"
+quote        = "1.0.40"
+serde        = { version = "1.0.219", features = [ "derive" ] }
+serde_yaml   = "0.9.34-deprecated"
+syn          = "2.0.104"

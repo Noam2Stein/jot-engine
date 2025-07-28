@@ -4,16 +4,37 @@ name    = "jot"
 version = "0.1.0"
 
 [dependencies]
-jot_game     = { path = "../jot_game", optional = true }
-jot_graphics = { path = "../jot_graphics", optional = true }
-jot_input    = { path = "../jot_input", optional = true }
-jot_math     = { path = "../jot_math", optional = true }
-jot_window   = { path = "../jot_window", optional = true }
-paste        = "1.0.15"
+jot_asset       = { path = "../jot_asset", optional = true }
+jot_camera      = { path = "../jot_camera", optional = true }
+jot_chunk       = { path = "../jot_chunk", optional = true }
+jot_collections = { path = "../jot_collections", optional = true }
+jot_ecs         = { path = "../jot_ecs", optional = true }
+jot_fixed       = { path = "../jot_fixed", optional = true }
+jot_game        = { path = "../jot_game", optional = true }
+jot_gpu         = { path = "../jot_gpu", optional = true }
+jot_input       = { path = "../jot_input", optional = true }
+jot_math        = { path = "../jot_math", optional = true }
+jot_renderer2d  = { path = "../jot_renderer2d", optional = true }
+jot_scene       = { path = "../jot_scene", optional = true }
+jot_scheme      = { path = "../jot_scheme", optional = true }
+jot_tilemap     = { path = "../jot_tilemap", optional = true }
+jot_window      = { path = "../jot_window", optional = true }
+
+macro_loop = "0.4.1"
 
 [features]
-game     = [ "graphics", "input", "jot_game", "math", "window" ]
-graphics = [ "jot_graphics", "math" ]
-input    = [ "jot_input", "math" ]
-math     = [ "jot_math" ]
-window   = [ "input", "jot_window" ]
+asset       = [ "jot_asset" ]
+camera      = [ "jot_camera" ]
+chunk       = [ "jot_chunk", "math" ]
+collections = [ "jot_collections" ]
+ecs         = [ "jot_ecs" ]
+fixed       = [ "jot_fixed" ]
+game        = [ "gpu", "input", "jot_game", "math" ]
+gpu         = [ "jot_gpu", "math" ]
+input       = [ "jot_input", "math" ]
+math        = [ "jot_math" ]
+renderer2d  = [ "camera", "gpu", "jot_renderer2d" ]
+scene       = [ "game", "jot_scene" ]
+scheme      = [ "collections", "input", "jot_scheme", "math" ]
+tilemap     = [ "camera", "gpu", "jot_tilemap", "math", "renderer2d" ]
+window      = [ "input", "jot_window" ]

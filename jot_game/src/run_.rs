@@ -1,37 +1,36 @@
-use std::{iter::once, mem::transmute, sync::Arc, time::Instant};
+use std::{iter::once, sync::Arc, time::Instant};
 
 use super::*;
 
-pub fn run<A: Game>() {
+pub fn run<A: GameType>() {
     let event_loop = EventLoop::new().unwrap();
 
-    let mut game_runner = AppRunner::<A>::Uninit;
+    let mut game_runner = GameRunner::<A>::Uninit;
 
     event_loop.run_app(&mut game_runner).unwrap();
 }
 
-enum AppRunner<'window, A: Game> {
+enum GameRunner<G: GameType> {
     Uninit,
-    Init(InitAppRunner<'window, A>),
+    Init(InitGameRunner<G>),
     Exited,
 }
-struct InitAppRunner<'window, A: Game> {
-    app: A,
+struct InitGameRunner<G: GameType> {
+    game: G,
+    gpu: Gpu,
     window: Arc<Window>,
-    surface: Surface<'window>,
-    surface_config: SurfaceConfiguration,
-    ctx: GPUContext,
-    input: InputProvider,
     fs_switch: FullscreenSwitch,
+    surface: GpuSurface<'static>,
+    input: InputProvider,
     instant: Instant,
 }
 
-impl<'a, A: Game> ApplicationHandler for AppRunner<'a, A> {
+impl<G: GameType> ApplicationHandler for GameRunner<G> {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         match self {
-            AppRunner::Uninit => *self = AppRunner::Init(InitAppRunner::new(event_loop)),
-            AppRunner::Init(_) => {}
-            AppRunner::Exited => {}
+            GameRunner::Uninit => *self = GameRunner::Init(InitGameRunner::new(event_loop)),
+            GameRunner::Init(_) => {}
+            GameRunner::Exited => {}
         }
     }
 
@@ -46,8 +45,8 @@ impl<'a, A: Game> ApplicationHandler for AppRunner<'a, A> {
             let mut input_events = runner.input.poll_events();
             while let Some(input_event) = input_events.next() {
                 match runner
-                    .app
-                    .event(&GameEvent::Input(input_event), &runner.ctx)
+                    .game
+                    .event(&GameEvent::Input(input_event), &runner.gpu)
                 {
                     GameFlow::Continue => {
                         runner.window.request_redraw();
@@ -55,7 +54,7 @@ impl<'a, A: Game> ApplicationHandler for AppRunner<'a, A> {
                     GameFlow::Exit => {
                         drop(input_events);
                         event_loop.exit();
-                        *self = AppRunner::Exited;
+                        *self = GameRunner::Exited;
                         return;
                     }
                 }
@@ -69,13 +68,13 @@ impl<'a, A: Game> ApplicationHandler for AppRunner<'a, A> {
             .as_secs_f64()
             .clamp(1.0 / 10_000.0, 1.0 / 30.0);
 
-        match runner.app.update(delta_time, &runner.ctx) {
+        match runner.game.update(delta_time, &runner.gpu) {
             GameFlow::Continue => {
                 runner.window.request_redraw();
             }
             GameFlow::Exit => {
                 event_loop.exit();
-                *self = AppRunner::Exited;
+                *self = GameRunner::Exited;
                 return;
             }
         }
@@ -97,8 +96,8 @@ impl<'a, A: Game> ApplicationHandler for AppRunner<'a, A> {
             let mut input_events = runner.input.map_events(once(&window_event));
             while let Some(input_event) = input_events.next() {
                 match runner
-                    .app
-                    .event(&GameEvent::Input(input_event), &runner.ctx)
+                    .game
+                    .event(&GameEvent::Input(input_event), &runner.gpu)
                 {
                     GameFlow::Continue => {
                         runner.window.request_redraw();
@@ -106,7 +105,7 @@ impl<'a, A: Game> ApplicationHandler for AppRunner<'a, A> {
                     GameFlow::Exit => {
                         drop(input_events);
                         event_loop.exit();
-                        *self = AppRunner::Exited;
+                        *self = GameRunner::Exited;
                         return;
                     }
                 }
@@ -117,23 +116,17 @@ impl<'a, A: Game> ApplicationHandler for AppRunner<'a, A> {
 
         let event = match window_event {
             WindowEvent::RedrawRequested => {
-                if let Ok(frame) = runner.surface.get_current_texture() {
-                    runner
-                        .app
-                        .draw(&frame.texture.create_view(&Default::default()), &runner.ctx);
+                let frame = runner.surface.next_frame();
 
-                    frame.present();
-                };
+                runner.game.draw(&frame.texture(), &runner.gpu);
 
                 None
             }
             WindowEvent::Resized(size) => {
                 if size.width > 0 && size.height > 0 {
-                    runner.surface_config.width = size.width;
-                    runner.surface_config.height = size.height;
                     runner
                         .surface
-                        .configure(&runner.ctx.device, &runner.surface_config);
+                        .resize(vec2!(size.width, size.height), &runner.gpu);
                 }
 
                 None
@@ -143,63 +136,39 @@ impl<'a, A: Game> ApplicationHandler for AppRunner<'a, A> {
         };
 
         if let Some(event) = event {
-            match runner.app.event(&event, &runner.ctx) {
+            match runner.game.event(&event, &runner.gpu) {
                 GameFlow::Continue => {}
                 GameFlow::Exit => {
                     event_loop.exit();
-                    *self = AppRunner::Exited;
+                    *self = GameRunner::Exited;
                 }
             }
         }
     }
 }
 
-impl<'a, A: Game> InitAppRunner<'a, A> {
+impl<G: GameType> InitGameRunner<G> {
     fn new(event_loop: &ActiveEventLoop) -> Self {
-        let window = event_loop.create_window(A::window_attrs()).unwrap();
-
-        let gpu = GPU::default();
-        let adapter_options = RequestAdapterOptions::default();
-        let adapter = pollster::block_on(gpu.request_adapter(&adapter_options))
-            .expect("adapter request failed");
-
-        let device_desc = GPUDeviceDescriptor::default();
-        let (device, queue) =
-            pollster::block_on(adapter.request_device(&device_desc, None)).unwrap();
+        let window = event_loop
+            .create_window(WindowAttributes::default().with_title(G::NAME))
+            .unwrap();
 
         let window = Arc::new(window);
-        let queue = Arc::new(queue);
-        let device = Arc::new(device);
-        let ctx = GPUContext { device, queue };
+        let gpu = Gpu::any();
 
-        let surface = gpu
-            .create_surface(unsafe { transmute::<&Window, &Window>(&window) })
-            .unwrap();
-
-        let mut surface_config = surface
-            .get_default_config(
-                &adapter,
-                window.inner_size().width,
-                window.inner_size().height,
-            )
-            .unwrap();
-
-        surface_config.present_mode = PresentMode::AutoNoVsync;
-
-        surface.configure(&ctx.device, &surface_config);
+        let surface = gpu.create_surface(window.clone(), &G::surface_desc());
 
         let input = InputProvider::new();
         let fs_switch = FullscreenSwitch::new();
 
-        let app = A::new(&ctx);
+        let app = G::new(&gpu);
 
         let instant = Instant::now();
 
         Self {
-            app,
-            ctx,
+            game: app,
+            gpu,
             surface,
-            surface_config,
             input,
             fs_switch,
             instant,

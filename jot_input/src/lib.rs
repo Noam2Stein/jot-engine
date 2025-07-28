@@ -11,6 +11,8 @@ pub use mouse::*;
 pub use winit::event::ElementState as ButtonState;
 use winit::event::{MouseScrollDelta, WindowEvent};
 
+/// A gloal input event.
+/// Not tied to a specific device.
 pub struct InputEvent {
     pub device_id: InputDeviceId,
     pub event: InputDeviceEvent,
@@ -25,6 +27,8 @@ pub enum InputDeviceEvent {
     Gamepad(GamepadEvent),
 }
 
+/// An input event tied to a specific device.
+/// Doesn't store the `DeviceId`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum InputDeviceId {
     Winit(winit::event::DeviceId),
@@ -69,7 +73,7 @@ impl InputProvider {
                         gilrs::EventType::Connected => events![InputDeviceEvent::Connect],
                         gilrs::EventType::Disconnected => events![InputDeviceEvent::Disconnect],
                         gilrs::EventType::ButtonPressed(button, _code) => {
-                            if let Some(button_code) = gilrs_to_button(button) {
+                            if let Some(button_code) = ButtonCode::from_gilrs(button) {
                                 events![InputDeviceEvent::Gamepad(GamepadEvent::Button {
                                     button: button_code,
                                     state: ButtonState::Pressed
@@ -79,7 +83,7 @@ impl InputProvider {
                             }
                         }
                         gilrs::EventType::ButtonReleased(button, _code) => {
-                            if let Some(button_code) = gilrs_to_button(button) {
+                            if let Some(button_code) = ButtonCode::from_gilrs(button) {
                                 events![InputDeviceEvent::Gamepad(GamepadEvent::Button {
                                     button: button_code,
                                     state: ButtonState::Released
@@ -89,10 +93,10 @@ impl InputProvider {
                             }
                         }
                         gilrs::EventType::ButtonChanged(button, value, _code) => {
-                            if let Some(value_code) = gilrs_to_value(button) {
+                            if let Some(value_code) = ValueCode::from_gilrs(button) {
                                 events![InputDeviceEvent::Gamepad(GamepadEvent::Value {
                                     code: value_code,
-                                    value: (value * 255.0) as u8,
+                                    value: (value * 16.0) as u8,
                                 })]
                             } else {
                                 events![]
@@ -100,16 +104,16 @@ impl InputProvider {
                         }
                         gilrs::EventType::AxisChanged(axis, value, _code) => {
                             if let Some((positive_value_code, negative_value_code)) =
-                                gilrs_to_axis(axis)
+                                ValueCode::from_gilrs_axis(axis)
                             {
                                 events![
                                     InputDeviceEvent::Gamepad(GamepadEvent::Value {
                                         code: positive_value_code,
-                                        value: (value * 255.0).max(0.0) as u8,
+                                        value: (value * 16.0).max(0.0) as u8,
                                     }),
                                     InputDeviceEvent::Gamepad(GamepadEvent::Value {
                                         code: negative_value_code,
-                                        value: (value * -255.0).max(0.0) as u8,
+                                        value: (value * -16.0).max(0.0) as u8,
                                     })
                                 ]
                             } else {
@@ -157,8 +161,8 @@ impl TryFrom<&WindowEvent> for InputEvent {
             } => Ok(InputEvent {
                 device_id: InputDeviceId::Winit(*device_id),
                 event: InputDeviceEvent::Mouse(MouseEvent::Scroll(match delta {
-                    MouseScrollDelta::LineDelta(right, down) => fvec2(*right, -*down),
-                    MouseScrollDelta::PixelDelta(delta) => fvec2(delta.x as f32, -delta.y as f32),
+                    MouseScrollDelta::LineDelta(right, down) => vec2!(*right, -*down),
+                    MouseScrollDelta::PixelDelta(delta) => vec2!(delta.x as f32, -delta.y as f32),
                 })),
             }),
             WindowEvent::CursorMoved {
@@ -166,7 +170,7 @@ impl TryFrom<&WindowEvent> for InputEvent {
                 position,
             } => Ok(InputEvent {
                 device_id: InputDeviceId::Winit(*device_id),
-                event: InputDeviceEvent::Mouse(MouseEvent::Move(fvec2(
+                event: InputDeviceEvent::Mouse(MouseEvent::Move(vec2!(
                     position.x as f32,
                     position.y as f32,
                 ))),

@@ -1,12 +1,18 @@
 [workspace]
 
-members = [
-    "examples/game",
-    "examples/pong",
-    "jot",
+members = [ "examples/cool_scenes",
+    "examples/dodger",
+    "examples/empty", "examples/flappy_bird", "examples/platformer",
+    "examples/pong", "examples/weird_map",
+    "jot", "jot_asset", "jot_camera", "jot_chunk",
+    "jot_collections",
+    "jot_ecs",
+    "jot_fixed",
     "jot_game",
-    "jot_graphics",
+    "jot_gpu",
     "jot_input",
     "jot_math",
+    "jot_renderer2d", "jot_scene",
+    "jot_scheme", "jot_tilemap",
     "jot_window",
 ]

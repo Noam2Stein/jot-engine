@@ -1,0 +1,14 @@
+[package]
+edition = "2024"
+name    = "platformer"
+version = "0.1.0"
+
+[dependencies]
+jot = { path = "../../jot", features = [
+    "fixed",
+    "game",
+    "renderer2d",
+    "scene",
+    "scheme",
+    "tilemap",
+] }
