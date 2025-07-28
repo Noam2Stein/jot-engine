@@ -111,7 +111,7 @@ impl SceneType for GameplayScene {
 impl Chunk2D for Chunk {
     type Context<'a> = (&'a mut HandleVec<Tilemap<10, Colored, Pos2D>>, &'a Gpu);
 
-    fn load(chunk_pos: IVec2, ctx: &mut Self::Context<'_>) -> Self {
+    fn load(chunk_pos: IVec2, _offset_from_center: IVec2, ctx: &mut Self::Context<'_>) -> Self {
         let noise = Perlin::new(9433);
 
         let mut tiles = Vec::with_capacity(32 * 32);

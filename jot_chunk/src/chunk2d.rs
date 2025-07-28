@@ -5,7 +5,11 @@ use super::*;
 pub trait Chunk2D {
     type Context<'a>;
 
-    fn load(chunk_pos: IVec2, ctx: &mut Self::Context<'_>) -> Self;
+    fn load(chunk_pos: IVec2, _offset_from_center: IVec2, ctx: &mut Self::Context<'_>) -> Self;
+
+    fn moved(&mut self, _offset_from_center: IVec2, ctx: &mut Self::Context<'_>) {
+        let _ = ctx;
+    }
 
     fn unload(self, ctx: &mut Self::Context<'_>);
 }
@@ -34,7 +38,13 @@ impl<
 
         let chunks = std::array::from_fn(|y| {
             std::array::from_fn(|x| {
-                Suspendable::Some(T::load(min_chunk_pos + vec2!(x as i32, y as i32), &mut ctx))
+                let local_chunk_pos = vec2!(x as i32, y as i32);
+
+                let chunk_pos = min_chunk_pos + local_chunk_pos;
+
+                let offset_from_center = local_chunk_pos - Self::CENTER_CHUNK_OFFSET;
+
+                Suspendable::Some(T::load(chunk_pos, offset_from_center, &mut ctx))
             })
         });
 
@@ -74,9 +84,13 @@ impl<
                             Suspendable::Placeholder,
                         )
                     } else {
-                        let chunk_pos = min_chunk_pos + vec2!(x as i32, y as i32);
+                        let local_chunk_pos = vec2!(x as i32, y as i32);
 
-                        Suspendable::Some(T::load(chunk_pos, &mut ctx))
+                        let chunk_pos = min_chunk_pos + local_chunk_pos;
+
+                        let offset_from_center = local_chunk_pos - Self::CENTER_CHUNK_OFFSET;
+
+                        Suspendable::Some(T::load(chunk_pos, offset_from_center, &mut ctx))
                     };
                 }
             }
