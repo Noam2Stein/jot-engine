@@ -42,7 +42,7 @@ impl GameplayScene {
             player_pos: SVec2::ZERO,
 
             renderer: Renderer::new(gpu),
-            tilemaps: HandleVec::new(),
+            tilemaps,
         }
     }
 }

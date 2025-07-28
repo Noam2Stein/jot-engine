@@ -123,6 +123,20 @@ impl<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D> Tilemap<CHUNK_HEI
 
         let mut background_color = input.background_color;
 
+        renderer.render(
+            RenderInput2D {
+                cam_bind_group: input.cam_bind_group,
+                background_color,
+                quads: self.tile_buf.slice(..),
+                visual_bind_group: input.visual_bind_group,
+                transform_bind_group: input.transform_bind_group,
+            },
+            output,
+            gpu,
+        );
+
+        return;
+
         let visible_chunks = input.cam.visible_tile_chunks::<CHUNK_HEIGHT>(aspect);
         let visible_columns = input.cam.visible_tile_columns(aspect);
 
@@ -151,7 +165,7 @@ impl<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D> Tilemap<CHUNK_HEI
                 RenderInput2D {
                     cam_bind_group: input.cam_bind_group,
                     background_color,
-                    quads: self.tile_buf.slice(tile_indicies),
+                    quads: self.tile_buf.slice(..),
                     visual_bind_group: input.visual_bind_group,
                     transform_bind_group: input.transform_bind_group,
                 },
