@@ -167,7 +167,7 @@ impl GameType for Pong {
         self.renderer.render(
             RenderInput2D {
                 cam_bind_group: &self.cam_bind_group,
-                background_color: Some(BACKGROUND_COLOR.to_storage()),
+                background_color: Some(BACKGROUND_COLOR.to_layout()),
 
                 quads: self.quads_buf.slice(..),
                 visual_bind_group: &self.visual_bind_group,
@@ -221,10 +221,10 @@ impl PongState {
     fn renderer_quads(&self) -> [Quad2D<Colored, Pos2D>; 3] {
         let left_player_quad = Quad2D {
             transform: Pos2D {
-                pos: self.left_player.center().to_storage(),
+                pos: self.left_player.center().to_layout(),
             },
             visual: Colored {
-                size: self.left_player.size().map(s32::as_f32).to_storage(),
+                size: self.left_player.size().map(s32::as_f32).to_layout(),
                 color: LEFT_PLAYER_COLOR,
             },
             depth: 0.0,
@@ -232,10 +232,10 @@ impl PongState {
 
         let right_player_quad = Quad2D {
             transform: Pos2D {
-                pos: self.right_player.center().to_storage(),
+                pos: self.right_player.center().to_layout(),
             },
             visual: Colored {
-                size: self.right_player.size().map(s32::as_f32).to_storage(),
+                size: self.right_player.size().map(s32::as_f32).to_layout(),
                 color: RIGHT_PLAYER_COLOR,
             },
             depth: 0.0,
@@ -243,10 +243,10 @@ impl PongState {
 
         let ball_quad = Quad2D {
             transform: Pos2D {
-                pos: self.ball.center().to_storage(),
+                pos: self.ball.center().to_layout(),
             },
             visual: Colored {
-                size: self.ball.size().map(s32::as_f32).to_storage(),
+                size: self.ball.size().map(s32::as_f32).to_layout(),
                 color: BALL_COLOR,
             },
             depth: 0.0,

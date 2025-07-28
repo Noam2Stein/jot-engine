@@ -35,7 +35,7 @@ pub trait Visual2D: Debug + Copy + PartialEq {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Sprite {
-    pub texture_rect: URect2P,
+    pub texture_rect: URectP,
 }
 
 #[derive(Debug, Clone, GpuBindings_Local)]
@@ -46,7 +46,7 @@ pub struct SpriteBindings {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ColoredSprite {
-    pub texture_rect: URect2P,
+    pub texture_rect: URectP,
     pub color: FVec4P,
 }
 

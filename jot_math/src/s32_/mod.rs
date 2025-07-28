@@ -7,12 +7,12 @@ use derive_more::{Add, AddAssign, Neg, Sub, SubAssign};
 
 use super::*;
 
+mod aabb;
 mod as_std;
 mod mat;
-mod rect;
 mod vec;
+pub use aabb::*;
 pub use mat::*;
-pub use rect::*;
 pub use vec::*;
 
 /// Fixed-point number with 32 bits, and 8 fractional bits.

@@ -2,7 +2,7 @@ use super::*;
 
 unsafe impl<const DIM: usize> GpuBindings for GpuTexture<DIM>
 where
-    MaybeVecLen<DIM>: GpuTextureDimension,
+    Usize<DIM>: GpuTextureDimension,
 {
     const BINDING_COUNT: usize = 1;
 
@@ -12,7 +12,7 @@ where
             visibility: wgpu::ShaderStages::all(), // placeholder probably
             ty: wgpu::BindingType::Texture {
                 sample_type: wgpu::TextureSampleType::Float { filterable: false },
-                view_dimension: <MaybeVecLen<DIM> as GpuTextureDimension>::TEXTURE_VIEW_DIMENSION,
+                view_dimension: <Usize<DIM> as GpuTextureDimension>::TEXTURE_VIEW_DIMENSION,
                 multisampled: false,
             },
             count: None,

@@ -7,9 +7,9 @@ use super::*;
 #[derive(Debug, Clone)]
 pub struct GpuTextureDesc<'a, const DIM: usize>
 where
-    MaybeVecLen<DIM>: GpuTextureDimension,
+    Usize<DIM>: GpuTextureDimension,
 {
-    pub size: <MaybeVecLen<DIM> as GpuTextureDimension>::Size,
+    pub size: <Usize<DIM> as GpuTextureDimension>::Size,
 
     pub color_format: Option<GpuTextureFormat>,
     pub color_data: Option<&'a [u8]>,
@@ -23,9 +23,9 @@ where
 #[derive(Debug, Clone)]
 pub struct GpuTexture<const DIM: usize>
 where
-    MaybeVecLen<DIM>: GpuTextureDimension,
+    Usize<DIM>: GpuTextureDimension,
 {
-    pub size: <MaybeVecLen<DIM> as GpuTextureDimension>::Size,
+    pub size: <Usize<DIM> as GpuTextureDimension>::Size,
 
     pub color: Option<wgpu::Texture>,
     pub color_view: Option<wgpu::TextureView>,
@@ -40,17 +40,17 @@ pub type GpuTextureUsages = wgpu::TextureUsages;
 impl Gpu {
     pub fn create_texture<const DIM: usize>(&self, desc: &GpuTextureDesc<DIM>) -> GpuTexture<DIM>
     where
-        MaybeVecLen<DIM>: GpuTextureDimension,
+        Usize<DIM>: GpuTextureDimension,
     {
         let color = if let Some(format) = desc.color_format {
             let texture_desc = wgpu::TextureDescriptor {
-                dimension: <MaybeVecLen<DIM> as GpuTextureDimension>::TEXTURE_DIMENSION,
+                dimension: <Usize<DIM> as GpuTextureDimension>::TEXTURE_DIMENSION,
                 format,
                 label: None,
                 view_formats: &[],
                 mip_level_count: 1,
                 sample_count: 1,
-                size: <MaybeVecLen<DIM> as GpuTextureDimension>::extents3d(desc.size),
+                size: <Usize<DIM> as GpuTextureDimension>::extents3d(desc.size),
                 usage: desc.usages,
             };
 
@@ -72,13 +72,13 @@ impl Gpu {
 
         let depth = if let Some(format) = desc.color_format {
             let texture_desc = wgpu::TextureDescriptor {
-                dimension: <MaybeVecLen<DIM> as GpuTextureDimension>::TEXTURE_DIMENSION,
+                dimension: <Usize<DIM> as GpuTextureDimension>::TEXTURE_DIMENSION,
                 format,
                 label: None,
                 view_formats: &[],
                 mip_level_count: 1,
                 sample_count: 1,
-                size: <MaybeVecLen<DIM> as GpuTextureDimension>::extents3d(desc.size),
+                size: <Usize<DIM> as GpuTextureDimension>::extents3d(desc.size),
                 usage: desc.usages,
             };
 
@@ -119,9 +119,9 @@ impl Gpu {
 
 impl<'a, const DIM: usize> GpuTexture<DIM>
 where
-    MaybeVecLen<DIM>: GpuTextureDimension,
+    Usize<DIM>: GpuTextureDimension,
 {
-    pub fn size(&self) -> <MaybeVecLen<DIM> as GpuTextureDimension>::Size {
+    pub fn size(&self) -> <Usize<DIM> as GpuTextureDimension>::Size {
         self.size
     }
 

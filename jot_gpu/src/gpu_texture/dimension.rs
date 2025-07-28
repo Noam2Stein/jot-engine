@@ -11,7 +11,7 @@ pub trait GpuTextureDimension {
     fn extents3d(size: Self::Size) -> wgpu::Extent3d;
 }
 
-impl GpuTextureDimension for MaybeVecLen<1> {
+impl GpuTextureDimension for Usize<1> {
     type Size = u32;
 
     const TEXTURE_DIMENSION: wgpu::TextureDimension = wgpu::TextureDimension::D1;
@@ -26,7 +26,7 @@ impl GpuTextureDimension for MaybeVecLen<1> {
     }
 }
 
-impl GpuTextureDimension for MaybeVecLen<2> {
+impl GpuTextureDimension for Usize<2> {
     type Size = UVec2P;
 
     const TEXTURE_DIMENSION: wgpu::TextureDimension = wgpu::TextureDimension::D2;
@@ -41,7 +41,7 @@ impl GpuTextureDimension for MaybeVecLen<2> {
     }
 }
 
-impl GpuTextureDimension for MaybeVecLen<3> {
+impl GpuTextureDimension for Usize<3> {
     type Size = UVec3P;
 
     const TEXTURE_DIMENSION: wgpu::TextureDimension = wgpu::TextureDimension::D3;

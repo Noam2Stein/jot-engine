@@ -17,7 +17,7 @@ pub struct GameplayScene {
 
     input: Resolver<Input>,
     fixed_time: FixedTime<FPS>,
-    chunks: ChunkHolder2D<Chunk, 32, 32, 3, 3>,
+    chunks: ThreadedChunkHolder2D<Chunk, 32, 32, 5, 5, 3, 3>,
 
     cam: Shake<DirectFollow<Pos2Camera>>,
 
@@ -35,7 +35,7 @@ impl GameplayScene {
         Self {
             input: Resolver::new(Input::default_bindings()),
             fixed_time: FixedTime::new(),
-            chunks: ChunkHolder2D::new(SVec2::ZERO, (&mut tilemaps, gpu)),
+            chunks: ThreadedChunkHolder2D::new(SVec2::ZERO, &mut tilemaps, gpu),
 
             cam: Shake::new(DirectFollow::new(SVec2::ZERO, 10.0)),
 
@@ -57,8 +57,7 @@ impl SceneType for GameplayScene {
             self.player_pos += vec2!(input.x.as_s32(), input.y.as_s32()) * s32::int(10) * TIME_STEP;
 
             self.cam.target_moved(self.player_pos);
-            self.chunks
-                .target_moved(self.player_pos, (&mut self.tilemaps, gpu));
+            self.chunks.update(self.player_pos, &mut self.tilemaps, gpu);
 
             if input.jump.is_triggered {
                 self.cam.shake(ShakeDesc::HEAVY);
@@ -96,7 +95,7 @@ impl SceneType for GameplayScene {
                         color: vec4p!(1.0, 0.0, 0.0, 1.0),
                     },
                     transform: Pos2D {
-                        pos: self.player_pos.to_storage(),
+                        pos: self.player_pos.to_layout(),
                     },
                 }],
 
@@ -108,10 +107,12 @@ impl SceneType for GameplayScene {
     }
 }
 
-impl Chunk2D for Chunk {
-    type Context<'a> = (&'a mut HandleVec<Tilemap<10, Colored, Pos2D>>, &'a Gpu);
+impl ThreadedChunk2D for Chunk {
+    type Context<'a> = &'a mut HandleVec<Tilemap<10, Colored, Pos2D>>;
+    type PrepareContext = Gpu;
+    type Prepare = Tilemap<10, Colored, Pos2D>;
 
-    fn load(chunk_pos: IVec2, _offset_from_center: IVec2, ctx: &mut Self::Context<'_>) -> Self {
+    fn prepare(chunk_pos: IVec2, ctx: Self::PrepareContext) -> Self::Prepare {
         let noise = Perlin::new(9433);
 
         let mut tiles = Vec::with_capacity(32 * 32);
@@ -130,15 +131,21 @@ impl Chunk2D for Chunk {
                         color: splat4p(lvl),
                     },
                     transform: Pos2D {
-                        pos: pos.map(s32::from_i32).to_storage(),
+                        pos: pos.map(s32::from_i32).to_layout(),
                     },
                 });
             }
         }
 
-        let tilemap = ctx.0.insert(Tilemap::new(&tiles, ctx.1));
+        let tilemap = Tilemap::new(&tiles, &ctx);
 
-        Self { _tilemap: tilemap }
+        tilemap
+    }
+
+    fn load(_chunk_pos: IVec2, prepared: Self::Prepare, ctx: &mut Self::Context<'_>) -> Self {
+        Self {
+            _tilemap: ctx.insert(prepared),
+        }
     }
 
     fn unload(self, _ctx: &mut Self::Context<'_>) {}

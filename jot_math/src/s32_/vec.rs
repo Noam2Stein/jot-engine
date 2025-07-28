@@ -10,7 +10,7 @@ impl Scalar for s32 {
 
 pub trait S32VectorExt<const N: usize>
 where
-    MaybeVecLen<N>: VecLen,
+    Usize<N>: VecLen,
 {
     const ZERO: Self;
     const ONE: Self;
@@ -41,7 +41,7 @@ where
 
 impl<const N: usize, A: VecAlignment> S32VectorExt<N> for Vector<N, s32, A>
 where
-    MaybeVecLen<N>: VecLen,
+    Usize<N>: VecLen,
 {
     const ZERO: Self = Vector::splat(s32::ZERO);
     const ONE: Self = Vector::splat(s32::ONE);
