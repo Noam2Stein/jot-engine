@@ -10,4 +10,5 @@ jot = { path = "../../jot", features = [
     "renderer2d",
     "scene",
     "scheme",
+    "tilemap",
 ] }

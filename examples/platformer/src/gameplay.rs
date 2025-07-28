@@ -17,23 +17,24 @@ pub struct GameplayScene {
     cam: Shake<DirectFollow<Pos2Camera>>,
 
     player_pos: SVec2,
-    quads: Vec<Quad>,
+
+    tilemap: Tilemap<10, Colored, Pos2D>,
 }
 
 impl GameplayScene {
     pub fn new(gpu: &Gpu) -> Self {
         Self {
-            renderer: Renderer::new(gpu, (), ()),
+            renderer: Renderer::new(gpu),
             input: Resolver::new(Input::default_bindings()),
             fixed_time: FixedTime::new(),
 
             cam: Shake::new(DirectFollow::new(SVec2::ZERO, 10.0)),
 
             player_pos: SVec2::ZERO,
-            quads: {
+            tilemap: {
                 // Assumes Quad, Colored, FVec2P, vec4p!, vec2p!, s32::int in scope
 
-                let mut quads = Vec::with_capacity(2000);
+                let mut tiles = Vec::with_capacity(2000);
 
                 for i in 0..2000 {
                     // 50 columns, 40 rows (same grid count as before)
@@ -46,17 +47,19 @@ impl GameplayScene {
                     let x = col as i32 * 5 - (cols as i32 * 5 / 2) + (row % 3 * 2);
                     let y = row as i32 * 5 - (40 * 5 / 2) + (col % 3 * 2);
 
-                    quads.push(Quad {
+                    tiles.push(Quad {
                         depth: 0.1,
                         visual: Colored {
                             size: FVec2P::ONE,
                             color: vec4p!(1.0, 0.8, 0.6, 1.0),
                         },
-                        transform: vec2p!(s32::int(x), s32::int(y)),
+                        transform: Pos2D {
+                            pos: vec2p!(s32::int(x), s32::int(y)),
+                        },
                     });
                 }
 
-                quads
+                Tilemap::new(&tiles, gpu)
             },
         }
     }
@@ -96,20 +99,22 @@ impl SceneType for GameplayScene {
     }
 
     fn draw(&mut self, output: &GpuTexture<2>, gpu: &Gpu) {
-        self.quads[0] = Quad {
-            depth: 0.0,
-            visual: Colored {
-                size: FVec2P::ONE,
-                color: splat4p(1.0),
-            },
-            transform: self.player_pos.to_storage(),
-        };
-
         self.renderer.render(
             RenderInput {
-                quads: &self.quads,
-                cam_bind_group: self.cam.inner(),
+                cam: self.cam.inner(),
                 background_color: vec4!(0.1, 0.2, 0.3, 0.0),
+
+                objs: &[Quad {
+                    depth: 0.0,
+                    visual: Colored {
+                        size: FVec2P::ONE,
+                        color: splat4p(1.0),
+                    },
+                    transform: Pos2D {
+                        pos: self.player_pos.to_storage(),
+                    },
+                }],
+                tilemaps: &[&self.tilemap],
             },
             output,
             gpu,

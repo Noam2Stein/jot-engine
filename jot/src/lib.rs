@@ -16,6 +16,7 @@ macro_loop! {
         scene,
         camera,
         chunk,
+        tilemap,
     ] {
         #[cfg(feature = @[@feature => str])]
         pub mod @feature {

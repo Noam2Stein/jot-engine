@@ -1,6 +1,6 @@
 use jot::{
     camera::*, collections::*, fixed::*, game::*, gpu::*, input::*, math::*, renderer2d::*,
-    scene::*, scheme::*,
+    scene::*, scheme::*, tilemap::*,
 };
 
 mod game;

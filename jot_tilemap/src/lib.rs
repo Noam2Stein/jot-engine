@@ -1,3 +1,4 @@
+use jot_camera::*;
 use jot_gpu::*;
 use jot_math::*;
 use jot_renderer2d::*;
