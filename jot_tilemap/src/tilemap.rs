@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ops::Range};
+use std::{cmp::Ordering, collections::HashMap, ops::Range};
 
 use super::*;
 
@@ -20,7 +20,12 @@ pub struct StructuredTiles<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransfor
 #[derive(Debug, Clone)]
 struct TilemapChunk<const CHUNK_HEIGHT: u32> {
     first_column: i32,
-    column_start_indicies: Vec<usize>,
+    columns: Vec<TilemapColumnInfo>,
+}
+
+#[derive(Debug, Clone)]
+struct TilemapColumnInfo {
+    start_idx: usize,
 }
 
 impl<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D> Tilemap<CHUNK_HEIGHT, V, T> {
@@ -34,6 +39,18 @@ impl<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D> Tilemap<CHUNK_HEI
     ///
     /// Please also make sure tile chunks are calculated as `tile_y.floor_div(CHUNK_HEIGHT)`.
     pub fn new_structured(tiles: &StructuredTiles<CHUNK_HEIGHT, V, T>, gpu: &Gpu) -> Self {
+        #[cfg(debug_assertions)]
+        {
+            for (tile_a, tile_b) in tiles.tiles.iter().zip(tiles.tiles.iter().skip(1)) {
+                if tile_cmp::<CHUNK_HEIGHT, V, T>(tile_a, tile_b) != Ordering::Less {
+                    panic!(
+                        "StructuredTiles is not sorted properly. {:?} {:?}",
+                        tile_a, tile_b
+                    );
+                }
+            }
+        }
+
         let tile_buf = gpu.create_buffer(GpuBufferDesc {
             label: Some("Tilemap Chunk Buffer"),
             usages: GpuBufferUsages::VERTEX,
@@ -44,10 +61,25 @@ impl<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D> Tilemap<CHUNK_HEI
             .chunks
             .iter()
             .map(|(&k, chunk_range)| {
-                let mut first_column = 0;
-                let mut column_start_indicies = Vec::new();
+                let chunk_tiles = &tiles.tiles[chunk_range.clone()];
 
-                for (tile_idx, tile) in tiles.tiles[chunk_range.clone()].iter().enumerate() {
+                #[cfg(debug_assertions)]
+                {
+                    for (tile_a, tile_b) in chunk_tiles.iter().zip(chunk_tiles.iter().skip(1)) {
+                        if tile_cmp_in_chunk::<CHUNK_HEIGHT, V, T>(tile_a, tile_b) != Ordering::Less
+                        {
+                            panic!(
+                                "StructuredTiles chunk is not sorted properly. {:?} {:?}",
+                                tile_a, tile_b
+                            );
+                        }
+                    }
+                }
+
+                let mut first_column = 0;
+                let mut columns = Vec::new();
+
+                for (tile_idx, tile) in chunk_tiles.iter().enumerate() {
                     let tile_pos = tile.transform.tile_pos();
                     let tile_column = tile_pos.x();
 
@@ -57,18 +89,20 @@ impl<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D> Tilemap<CHUNK_HEI
 
                     // purposefully filling in the gaps between columns.
                     while {
-                        let last_column = first_column + column_start_indicies.len() as i32 - 1;
+                        let last_column = first_column + columns.len() as i32 - 1;
                         let is_new_column = tile_column != last_column;
 
                         is_new_column
                     } {
-                        column_start_indicies.push(tile_idx);
+                        columns.push(TilemapColumnInfo {
+                            start_idx: tile_idx,
+                        });
                     }
                 }
 
                 let v = TilemapChunk {
                     first_column,
-                    column_start_indicies,
+                    columns,
                 };
 
                 (k, v)
@@ -89,24 +123,29 @@ impl<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D> Tilemap<CHUNK_HEI
 
         let mut background_color = input.background_color;
 
+        let visible_chunks = input.cam.visible_tile_chunks::<CHUNK_HEIGHT>(aspect);
         let visible_columns = input.cam.visible_tile_columns(aspect);
 
-        for chunk_row in input.cam.visible_tile_chunks::<CHUNK_HEIGHT>(aspect) {
+        for chunk_row in self.chunks.keys() {
             let chunk = match self.chunks.get(&chunk_row) {
                 Some(chunk) => chunk,
                 None => continue,
             };
 
             let start_column_idx = (visible_columns.start - chunk.first_column)
-                .clamp(0, chunk.column_start_indicies.len() as i32)
+                .clamp(0, chunk.columns.len() as i32 - 1)
                 as usize;
 
             let end_column_idx = (visible_columns.end - chunk.first_column)
-                .clamp(0, chunk.column_start_indicies.len() as i32)
-                as usize;
+                .clamp(0, chunk.columns.len() as i32 - 1) as usize;
 
-            let tile_indicies = chunk.column_start_indicies[start_column_idx]
-                ..chunk.column_start_indicies[end_column_idx];
+            println!("start_column_idx: {}", start_column_idx);
+            println!("end_column_idx: {}", end_column_idx);
+
+            let start_column = &chunk.columns[start_column_idx];
+            let end_column = &chunk.columns[end_column_idx];
+
+            let tile_indicies = start_column.start_idx..end_column.start_idx;
 
             renderer.render(
                 RenderInput2D {
@@ -129,29 +168,52 @@ impl<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D> StructuredTiles<C
     pub fn new(unstructured_tiles: &[Quad2D<V, T>]) -> Self {
         let mut tiles = Vec::from_iter(unstructured_tiles.iter().copied());
 
-        tiles.sort_by(|a, b| {
-            let a_pos = a.transform.tile_pos();
-            let b_pos = b.transform.tile_pos();
-            let a_chunk = a.transform.tile_chunk::<CHUNK_HEIGHT>();
-            let b_chunk = b.transform.tile_chunk::<CHUNK_HEIGHT>();
-
-            if a_chunk != b_chunk {
-                a_chunk.cmp(&b_chunk)
-            } else if a_pos.x() != b_pos.x() {
-                a_pos.x().cmp(&b_pos.x())
-            } else {
-                a_pos.y().cmp(&b_pos.y())
-            }
-        });
+        tiles.sort_by(tile_cmp::<CHUNK_HEIGHT, V, T>);
 
         let mut chunks = HashMap::<i32, Range<usize>>::new();
 
         for (tile_idx, tile) in tiles.iter().enumerate() {
-            let tile_chunk = tile.transform.tile_chunk::<CHUNK_HEIGHT>();
+            let tile_chunk = tile_chunk::<CHUNK_HEIGHT>(tile.transform.tile_pos());
 
-            chunks.entry(tile_chunk).or_insert(0..0).end = tile_idx + 1;
+            chunks.entry(tile_chunk).or_insert(tile_idx..tile_idx).end = tile_idx + 1;
         }
 
         Self { tiles, chunks }
+    }
+}
+
+fn tile_chunk<const CHUNK_HEIGHT: u32>(tile_pos: IVec2) -> i32 {
+    (s32::from_i32(tile_pos.y()) / s32::from_u32(CHUNK_HEIGHT))
+        .floor()
+        .as_i32()
+}
+
+fn tile_cmp<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D>(
+    a: &Quad2D<V, T>,
+    b: &Quad2D<V, T>,
+) -> Ordering {
+    let a_pos = a.transform.tile_pos();
+    let b_pos = b.transform.tile_pos();
+    let a_chunk = tile_chunk::<CHUNK_HEIGHT>(a_pos);
+    let b_chunk = tile_chunk::<CHUNK_HEIGHT>(b_pos);
+
+    if a_chunk != b_chunk {
+        a_chunk.cmp(&b_chunk)
+    } else {
+        tile_cmp_in_chunk::<CHUNK_HEIGHT, V, T>(a, b)
+    }
+}
+
+fn tile_cmp_in_chunk<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D>(
+    a: &Quad2D<V, T>,
+    b: &Quad2D<V, T>,
+) -> Ordering {
+    let a_pos = a.transform.tile_pos();
+    let b_pos = b.transform.tile_pos();
+
+    if a_pos.x() != b_pos.x() {
+        a_pos.x().cmp(&b_pos.x())
+    } else {
+        a_pos.y().cmp(&b_pos.y())
     }
 }

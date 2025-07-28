@@ -126,6 +126,10 @@ where
     }
 
     pub fn clear(&self, color: Option<FVec4>, depth: Option<f32>, gpu: &Gpu) {
+        if self.color_view.is_none() && self.depth_view.is_none() {
+            return;
+        }
+
         let mut encoder = gpu
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {

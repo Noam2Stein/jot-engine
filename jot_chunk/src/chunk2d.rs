@@ -3,11 +3,11 @@ use std::mem::replace;
 use super::*;
 
 pub trait Chunk2D {
-    type Context;
+    type Context<'a>;
 
-    fn load(chunk_pos: IVec2, ctx: &mut Self::Context) -> Self;
+    fn load(chunk_pos: IVec2, ctx: &mut Self::Context<'_>) -> Self;
 
-    fn unload(self, ctx: &mut Self::Context);
+    fn unload(self, ctx: &mut Self::Context<'_>);
 }
 
 pub struct ChunkHolder2D<
@@ -29,12 +29,12 @@ impl<
     const CHUNKS_Y: usize,
 > ChunkHolder2D<T, CHUNK_WIDTH, CHUNK_HEIGHT, CHUNKS_X, CHUNKS_Y>
 {
-    pub fn new(pos: SVec2, ctx: &mut T::Context) -> Self {
+    pub fn new<'ctx>(pos: SVec2, mut ctx: T::Context<'ctx>) -> Self {
         let min_chunk_pos = Self::get_min_chunk_pos(pos);
 
         let chunks = std::array::from_fn(|y| {
             std::array::from_fn(|x| {
-                Suspendable::Some(T::load(min_chunk_pos + vec2!(x as i32, y as i32), ctx))
+                Suspendable::Some(T::load(min_chunk_pos + vec2!(x as i32, y as i32), &mut ctx))
             })
         });
 
@@ -44,7 +44,7 @@ impl<
         }
     }
 
-    pub fn target_moved(&mut self, pos: SVec2, ctx: &mut T::Context) {
+    pub fn target_moved(&mut self, pos: SVec2, mut ctx: T::Context<'_>) {
         let min_chunk_pos = Self::get_min_chunk_pos(pos);
 
         if min_chunk_pos != self.min_chunk_pos {
@@ -76,14 +76,14 @@ impl<
                     } else {
                         let chunk_pos = min_chunk_pos + vec2!(x as i32, y as i32);
 
-                        Suspendable::Some(T::load(chunk_pos, ctx))
+                        Suspendable::Some(T::load(chunk_pos, &mut ctx))
                     };
                 }
             }
 
             for old_chunk in old_chunks.into_iter().flatten() {
                 if let Suspendable::Some(chunk) = old_chunk {
-                    chunk.unload(ctx);
+                    chunk.unload(&mut ctx);
                 }
             }
         }

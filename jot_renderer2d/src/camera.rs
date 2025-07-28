@@ -26,7 +26,7 @@ impl Camera2D for Pos2Camera {
     const WGSL_VERTEX_LOGIC: &str = "
         let cam_pos = world_pos - vec2f(cam.center) / 256.0;
         let cam_extents = vec2f(cam.ortho_size * aspect, cam.ortho_size);
-        output.pos = vec4(cam_pos / cam_extents, input.depth, 1.0);
+        output.pos = vec4(cam_pos / cam_extents / 10.0, input.depth, 1.0);
     ";
 }
 
