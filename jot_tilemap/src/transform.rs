@@ -1,5 +1,3 @@
-use std::cmp::Ordering;
-
 use super::*;
 
 pub trait TileTransform2D: Transform2D {
