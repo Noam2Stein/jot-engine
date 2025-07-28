@@ -5,6 +5,7 @@ use crevice::std140::AsStd140;
 
 use super::*;
 
+#[derive(Debug, Clone)]
 pub struct Renderer2D<V: Visual2D, T: Transform2D, C: Camera2D> {
     shared: SharedResources2D,
     pipeline: wgpu::RenderPipeline,
