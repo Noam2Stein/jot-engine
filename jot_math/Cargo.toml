@@ -6,5 +6,5 @@ version = "0.1.0"
 [dependencies]
 crevice     = "0.18.0"
 derive_more = { version = "2.0.1", features = [ "full" ] }
-ggmath      = { version = "0.11.0", features = [ "crevice", "full" ] }
+ggmath      = { version = "0.11.1", features = [ "crevice", "full" ] }
 macro_loop  = "0.4.2"

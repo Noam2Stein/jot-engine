@@ -19,6 +19,15 @@ where
         });
 
         *binding += 1;
+
+        entries.push(wgpu::BindGroupLayoutEntry {
+            binding: *binding,
+            visibility: wgpu::ShaderStages::all(), // placeholder probably
+            ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::NonFiltering),
+            count: None,
+        });
+
+        *binding += 1;
     }
 
     fn push_entries<'s>(&'s self, entries: &mut Vec<wgpu::BindGroupEntry<'s>>, binding: &mut u32) {
@@ -26,6 +35,15 @@ where
             binding: *binding,
             resource: wgpu::BindingResource::TextureView(
                 self.color_view.as_ref().expect("expected color"),
+            ),
+        });
+
+        *binding += 1;
+
+        entries.push(wgpu::BindGroupEntry {
+            binding: *binding,
+            resource: wgpu::BindingResource::Sampler(
+                self.sampler.as_ref().expect("expected sampler"),
             ),
         });
 
