@@ -32,6 +32,8 @@ where
 
     pub depth: Option<wgpu::Texture>,
     pub depth_view: Option<wgpu::TextureView>,
+
+    pub sampler: Option<wgpu::Sampler>,
 }
 
 pub type GpuTextureFormat = wgpu::TextureFormat;
@@ -113,6 +115,15 @@ impl Gpu {
             color_view,
             depth,
             depth_view,
+
+            sampler: Some(self.device.create_sampler(&wgpu::SamplerDescriptor {
+                address_mode_u: wgpu::AddressMode::ClampToEdge,
+                address_mode_v: wgpu::AddressMode::ClampToEdge,
+                address_mode_w: wgpu::AddressMode::ClampToEdge,
+                mag_filter: wgpu::FilterMode::Nearest,
+                min_filter: wgpu::FilterMode::Nearest,
+                ..Default::default()
+            })),
         }
     }
 }

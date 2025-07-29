@@ -122,6 +122,8 @@ impl<'target> GpuSurface<'target> {
                 .depth_texture
                 .as_ref()
                 .map(|rw| rw.read().unwrap().create_view(&Default::default())),
+
+            sampler: None,
         };
 
         GpuSurfaceFrame {
