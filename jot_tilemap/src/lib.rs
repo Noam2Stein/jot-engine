@@ -3,10 +3,12 @@ use jot_gpu::*;
 use jot_math::*;
 use jot_renderer2d::*;
 
+mod asset;
 mod camera;
 mod render_input;
 mod tilemap;
 mod transform;
+pub use asset::*;
 pub use camera::*;
 pub use render_input::*;
 pub use tilemap::*;

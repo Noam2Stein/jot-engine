@@ -1,5 +1,7 @@
 use std::{cmp::Ordering, collections::HashMap, ops::Range};
 
+use serde::{Deserialize, Serialize};
+
 use super::*;
 
 #[derive(Debug, Clone)]
@@ -11,6 +13,7 @@ pub struct Tilemap<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D> {
 /// Please make sure that the tiles are sorted bottom to top, left to right, column by column.
 ///
 /// Please also make sure tile chunks are calculated as `tile_y.floor_div(CHUNK_HEIGHT)`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StructuredTiles<const CHUNK_HEIGHT: u32, V: Visual2D, T: TileTransform2D> {
     pub tiles: Vec<Quad2D<V, T>>,
     /// For each chunk, the range indicies from `tiles` that are in the chunk.

@@ -4,7 +4,14 @@ name    = "jot_tilemap"
 version = "0.1.0"
 
 [dependencies]
+jot_asset      = { path = "../jot_asset" }
 jot_camera     = { path = "../jot_camera" }
 jot_gpu        = { path = "../jot_gpu" }
 jot_math       = { path = "../jot_math" }
 jot_renderer2d = { path = "../jot_renderer2d" }
+
+asefile     = "0.3.8"
+bitcode     = { version = "0.6.6", features = [ "serde" ] }
+proc-macro2 = "1.0.95"
+quote       = "1.0.40"
+serde       = { version = "1.0.219", features = [ "derive" ] }
