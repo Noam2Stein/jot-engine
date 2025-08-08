@@ -25,7 +25,10 @@ impl Value {
 }
 
 mod private {
-    use std::collections::HashMap;
+    use std::{
+        collections::HashMap,
+        ops::{Add, AddAssign},
+    };
 
     use super::*;
 
@@ -128,6 +131,169 @@ mod private {
             }
 
             output
+        }
+    }
+
+    impl Add for &ValueBindings {
+        type Output = ValueBindings;
+
+        fn add(self, rhs: Self) -> Self::Output {
+            let mut output = self.clone();
+
+            output.flat += &rhs.flat;
+            output.values.extend(rhs.values.iter());
+
+            output
+        }
+    }
+    impl AddAssign<&ValueBindings> for ValueBindings {
+        fn add_assign(&mut self, rhs: &ValueBindings) {
+            self.flat += &rhs.flat;
+            self.values.extend(rhs.values.iter());
+        }
+    }
+
+    impl BindingsType for ValueBindings {
+        fn flatten(&mut self) {
+            self.flat.values.extend(self.values.drain());
+        }
+    }
+
+    impl<T: Into<ValueBindings>> From<Flat<T>> for ValueBindings {
+        fn from(value: Flat<T>) -> Self {
+            value.0.into()
+        }
+    }
+}
+
+impl Value {
+    pub fn key(key: KeyCode) -> Bindings<Self> {
+        Bindings::<Self> {
+            flat: Button::key(key),
+            ..Default::default()
+        }
+    }
+
+    pub fn mouse_button(button: MouseButton) -> Bindings<Self> {
+        Bindings::<Self> {
+            flat: Button::mouse_button(button),
+            ..Default::default()
+        }
+    }
+    pub fn scroll_right() -> Bindings<Self> {
+        Bindings::<Self> {
+            flat: Button::scroll_right(),
+            ..Default::default()
+        }
+    }
+    pub fn scroll_left() -> Bindings<Self> {
+        Bindings::<Self> {
+            flat: Button::scroll_left(),
+            ..Default::default()
+        }
+    }
+    pub fn scroll_up() -> Bindings<Self> {
+        Bindings::<Self> {
+            flat: Button::scroll_up(),
+            ..Default::default()
+        }
+    }
+    pub fn scroll_down() -> Bindings<Self> {
+        Bindings::<Self> {
+            flat: Button::scroll_down(),
+            ..Default::default()
+        }
+    }
+
+    pub fn button(button: ButtonCode) -> Bindings<Self> {
+        Bindings::<Self> {
+            flat: Button::button(button),
+            ..Default::default()
+        }
+    }
+    pub fn value(value: ValueCode) -> Bindings<Self> {
+        Bindings::<Self> {
+            values: Set64::from_iter([value]),
+            ..Default::default()
+        }
+    }
+    pub fn flat_value(value: ValueCode) -> Bindings<Self> {
+        Bindings::<Self> {
+            flat: Button::value(value),
+            ..Default::default()
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub struct Flat<T>(pub T);
+
+impl From<KeyCode> for Bindings<Value> {
+    fn from(key: KeyCode) -> Self {
+        Value::key(key)
+    }
+}
+impl From<MouseButton> for Bindings<Value> {
+    fn from(button: MouseButton) -> Self {
+        Value::mouse_button(button)
+    }
+}
+impl From<ScrollRight> for Bindings<Value> {
+    fn from(_: ScrollRight) -> Self {
+        Value::scroll_right()
+    }
+}
+impl From<ScrollLeft> for Bindings<Value> {
+    fn from(_: ScrollLeft) -> Self {
+        Value::scroll_left()
+    }
+}
+impl From<ScrollUp> for Bindings<Value> {
+    fn from(_: ScrollUp) -> Self {
+        Value::scroll_up()
+    }
+}
+impl From<ScrollDown> for Bindings<Value> {
+    fn from(_: ScrollDown) -> Self {
+        Value::scroll_down()
+    }
+}
+impl From<ButtonCode> for Bindings<Value> {
+    fn from(button: ButtonCode) -> Self {
+        Value::button(button)
+    }
+}
+impl From<ValueCode> for Bindings<Value> {
+    fn from(value: ValueCode) -> Self {
+        Value::value(value)
+    }
+}
+
+repetitive! {
+    @for len in 0..=16 {
+        @let GenericParams = @{
+            @for i in 0..len {
+                @['T i]: Into<Bindings<Value>>,
+            }
+        };
+        @let GenericArgs = @{
+            @for i in 0..len {
+                @['T i],
+            }
+        };
+        @let Tuple = @{(@GenericArgs)};
+
+        impl<@GenericParams> From<@Tuple> for Bindings<Value> {
+            fn from(#[allow(unused_variables)] value: @Tuple) -> Self {
+                #[allow(unused_mut)]
+                let mut output = Default::default();
+
+                @for i in 0..len {
+                    output += &value.@i.into();
+                }
+
+                output
+            }
         }
     }
 }

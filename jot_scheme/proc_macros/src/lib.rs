@@ -174,6 +174,66 @@ fn input_derive_macro_inner(
         )
         .collect::<Vec<_>>();
 
+    let add_fields = fields
+        .iter()
+        .map(
+            |Field {
+                 attrs: _,
+                 vis: _,
+                 mutability: _,
+                 ident,
+                 colon_token,
+                 ty,
+             }| {
+                quote_spanned! {
+                    ty.span() =>
+
+                    #ident #colon_token &self.#ident + &rhs.#ident
+                }
+            },
+        )
+        .collect::<Vec<_>>();
+
+    let add_assign_fields = fields
+        .iter()
+        .map(
+            |Field {
+                 attrs: _,
+                 vis: _,
+                 mutability: _,
+                 ident,
+                 colon_token: _,
+                 ty,
+             }| {
+                quote_spanned! {
+                    ty.span() =>
+
+                    self.#ident += &rhs.#ident;
+                }
+            },
+        )
+        .collect::<Vec<_>>();
+
+    let flatten_fields = fields
+        .iter()
+        .map(
+            |Field {
+                 attrs: _,
+                 vis: _,
+                 mutability: _,
+                 ident,
+                 colon_token: _,
+                 ty,
+             }| {
+                quote_spanned! {
+                    ty.span() =>
+
+                    self.#ident.flatten();
+                }
+            },
+        )
+        .collect::<Vec<_>>();
+
     quote! {
         mod #private_mod_name {
             use super::*;
@@ -208,6 +268,37 @@ fn input_derive_macro_inner(
                     Self {#(
                         #step_fields,
                     )*}
+                }
+            }
+
+            impl std::ops::Add for &#bindings_name {
+                type Output = #bindings_name;
+
+                fn add(self, rhs: Self) -> Self::Output {
+                    #bindings_name {#(
+                        #add_fields,
+                    )*}
+                }
+            }
+            impl std::ops::AddAssign<&#bindings_name> for #bindings_name {
+                fn add_assign(&mut self, rhs: &Self) {
+                    #(
+                        #add_assign_fields
+                    )*
+                }
+            }
+
+            impl #jot_scheme::BindingsType for #bindings_name {
+                fn flatten(&mut self) {
+                    #(
+                        #flatten_fields
+                    )*
+                }
+            }
+
+            impl<T: Into<#bindings_name>> From<Flat<T>> for #bindings_name {
+                fn from(value: Flat<T>) -> Self {
+                    value.0.into()
                 }
             }
         }

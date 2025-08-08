@@ -21,7 +21,10 @@ pub struct Button {
 }
 
 mod private {
-    use std::collections::HashMap;
+    use std::{
+        collections::HashMap,
+        ops::{Add, AddAssign},
+    };
 
     use super::*;
 
@@ -207,6 +210,175 @@ mod private {
             }
 
             output
+        }
+    }
+
+    impl Add for &ButtonBindings {
+        type Output = ButtonBindings;
+
+        fn add(self, rhs: Self) -> Self::Output {
+            let mut output = self.clone();
+
+            output.keys.extend(rhs.keys.iter());
+            output.mouse_buttons.extend(rhs.mouse_buttons.iter());
+            output.mouse_scroll_right_enabled |= rhs.mouse_scroll_right_enabled;
+            output.mouse_scroll_left_enabled |= rhs.mouse_scroll_left_enabled;
+            output.mouse_scroll_up_enabled |= rhs.mouse_scroll_up_enabled;
+            output.mouse_scroll_down_enabled |= rhs.mouse_scroll_down_enabled;
+            output.buttons.extend(rhs.buttons.iter());
+            output.values.extend(rhs.values.iter());
+
+            output
+        }
+    }
+    impl AddAssign<&ButtonBindings> for ButtonBindings {
+        fn add_assign(&mut self, rhs: &ButtonBindings) {
+            self.keys.extend(rhs.keys.iter());
+            self.mouse_buttons.extend(rhs.mouse_buttons.iter());
+            self.mouse_scroll_right_enabled |= rhs.mouse_scroll_right_enabled;
+            self.mouse_scroll_left_enabled |= rhs.mouse_scroll_left_enabled;
+            self.mouse_scroll_up_enabled |= rhs.mouse_scroll_up_enabled;
+            self.mouse_scroll_down_enabled |= rhs.mouse_scroll_down_enabled;
+            self.buttons.extend(rhs.buttons.iter());
+            self.values.extend(rhs.values.iter());
+        }
+    }
+
+    impl BindingsType for ButtonBindings {
+        fn flatten(&mut self) {}
+    }
+
+    impl<T: Into<ButtonBindings>> From<Flat<T>> for ButtonBindings {
+        fn from(value: Flat<T>) -> Self {
+            value.0.into()
+        }
+    }
+}
+
+impl Button {
+    pub fn key(key: KeyCode) -> Bindings<Self> {
+        Bindings::<Self> {
+            keys: Set64::from_iter([key]),
+            ..Default::default()
+        }
+    }
+
+    pub fn mouse_button(button: MouseButton) -> Bindings<Self> {
+        Bindings::<Self> {
+            mouse_buttons: Set64::from_iter([button]),
+            ..Default::default()
+        }
+    }
+    pub fn scroll_right() -> Bindings<Self> {
+        Bindings::<Self> {
+            mouse_scroll_right_enabled: true,
+            ..Default::default()
+        }
+    }
+    pub fn scroll_left() -> Bindings<Self> {
+        Bindings::<Self> {
+            mouse_scroll_left_enabled: true,
+            ..Default::default()
+        }
+    }
+    pub fn scroll_up() -> Bindings<Self> {
+        Bindings::<Self> {
+            mouse_scroll_up_enabled: true,
+            ..Default::default()
+        }
+    }
+    pub fn scroll_down() -> Bindings<Self> {
+        Bindings::<Self> {
+            mouse_scroll_down_enabled: true,
+            ..Default::default()
+        }
+    }
+
+    pub fn button(button: ButtonCode) -> Bindings<Self> {
+        Bindings::<Self> {
+            buttons: Set64::from_iter([button]),
+            ..Default::default()
+        }
+    }
+    pub fn value(value: ValueCode) -> Bindings<Self> {
+        Bindings::<Self> {
+            values: Set64::from_iter([value]),
+            ..Default::default()
+        }
+    }
+}
+
+pub struct ScrollRight;
+pub struct ScrollLeft;
+pub struct ScrollUp;
+pub struct ScrollDown;
+
+impl From<KeyCode> for Bindings<Button> {
+    fn from(key: KeyCode) -> Self {
+        Button::key(key)
+    }
+}
+impl From<MouseButton> for Bindings<Button> {
+    fn from(button: MouseButton) -> Self {
+        Button::mouse_button(button)
+    }
+}
+impl From<ScrollRight> for Bindings<Button> {
+    fn from(_: ScrollRight) -> Self {
+        Button::scroll_right()
+    }
+}
+impl From<ScrollLeft> for Bindings<Button> {
+    fn from(_: ScrollLeft) -> Self {
+        Button::scroll_left()
+    }
+}
+impl From<ScrollUp> for Bindings<Button> {
+    fn from(_: ScrollUp) -> Self {
+        Button::scroll_up()
+    }
+}
+impl From<ScrollDown> for Bindings<Button> {
+    fn from(_: ScrollDown) -> Self {
+        Button::scroll_down()
+    }
+}
+impl From<ButtonCode> for Bindings<Button> {
+    fn from(button: ButtonCode) -> Self {
+        Button::button(button)
+    }
+}
+impl From<ValueCode> for Bindings<Button> {
+    fn from(value: ValueCode) -> Self {
+        Button::value(value)
+    }
+}
+
+repetitive! {
+    @for len in 0..=16 {
+        @let GenericParams = @{
+            @for i in 0..len {
+                @['T i]: Into<Bindings<Button>>,
+            }
+        };
+        @let GenericArgs = @{
+            @for i in 0..len {
+                @['T i],
+            }
+        };
+        @let Tuple = @{(@GenericArgs)};
+
+        impl<@GenericParams> From<@Tuple> for Bindings<Button> {
+            fn from(#[allow(unused_variables)] value: @Tuple) -> Self {
+                #[allow(unused_mut)]
+                let mut output = Default::default();
+
+                @for i in 0..len {
+                    output += &value.@i.into();
+                }
+
+                output
+            }
         }
     }
 }
