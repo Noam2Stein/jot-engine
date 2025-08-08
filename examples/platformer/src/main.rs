@@ -6,7 +6,6 @@ use jot::{
 mod game;
 mod gameplay;
 mod input;
-mod renderer;
 
 fn main() {
     run::<game::Game>();

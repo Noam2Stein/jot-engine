@@ -9,6 +9,7 @@ pub struct GpuBufferUninitSliceDesc<'a> {
     pub len: usize,
 }
 
+#[derive_where(crate = "derive_where")]
 #[derive_where(Debug, Clone, Copy)]
 pub struct GpuBufferSlice<'a, T: Sized> {
     pub buf: &'a GpuBuffer<[T]>,

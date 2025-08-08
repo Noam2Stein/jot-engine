@@ -1,3 +1,4 @@
+use jot_macros::*;
 use jot_math::*;
 use jot_window::*;
 
@@ -16,4 +17,5 @@ pub use gpu_layout::*;
 pub use gpu_surface::*;
 pub use gpu_texture::*;
 
+pub use crevice;
 pub use wgpu;

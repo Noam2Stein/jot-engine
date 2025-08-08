@@ -1,0 +1,9 @@
+[package]
+edition = "2024"
+name    = "jot_macros"
+version = "0.1.0"
+
+[dependencies]
+derive-where = "1.5.0"
+derive_more  = { version = "2.0.1", features = [ "full" ] }
+repetitive   = "0.1.5"

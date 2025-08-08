@@ -17,10 +17,11 @@ jot_math        = { path = "../jot_math", optional = true }
 jot_renderer2d  = { path = "../jot_renderer2d", optional = true }
 jot_scene       = { path = "../jot_scene", optional = true }
 jot_scheme      = { path = "../jot_scheme", optional = true }
+jot_serialize   = { path = "../jot_serialize", optional = true }
 jot_tilemap     = { path = "../jot_tilemap", optional = true }
 jot_window      = { path = "../jot_window", optional = true }
 
-macro_loop = "0.4.1"
+jot_macros = { path = "../jot_macros" }
 
 [features]
 asset       = [ "jot_asset" ]
@@ -36,5 +37,6 @@ math        = [ "jot_math" ]
 renderer2d  = [ "camera", "gpu", "jot_renderer2d" ]
 scene       = [ "game", "jot_scene" ]
 scheme      = [ "collections", "input", "jot_scheme", "math" ]
+serialize   = [ "jot_serialize" ]
 tilemap     = [ "camera", "gpu", "jot_tilemap", "math", "renderer2d" ]
 window      = [ "input", "jot_window" ]

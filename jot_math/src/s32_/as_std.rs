@@ -1,5 +1,5 @@
 use crevice::{std140::AsStd140, std430::AsStd430};
-use ggmath::intergration::crevice_::{ScalarAsStd140, ScalarAsStd430};
+use ggmath::crevice_::{ScalarAsStd140, ScalarAsStd430};
 
 use super::*;
 
@@ -32,24 +32,24 @@ impl ScalarAsStd140 for s32 {
     type OutputVec3 = <i32 as ScalarAsStd140>::OutputVec3;
     type OutputVec4 = <i32 as ScalarAsStd140>::OutputVec4;
 
-    fn from_vec2(vec: Self::OutputVec2) -> [Self::Output; 2] {
-        <i32 as ScalarAsStd140>::from_vec2(vec)
+    fn std140_from_vec2(vec: Self::OutputVec2) -> [Self::Output; 2] {
+        <i32 as ScalarAsStd140>::std140_from_vec2(vec)
     }
-    fn from_vec3(vec: Self::OutputVec3) -> [Self::Output; 3] {
-        <i32 as ScalarAsStd140>::from_vec3(vec)
+    fn std140_from_vec3(vec: Self::OutputVec3) -> [Self::Output; 3] {
+        <i32 as ScalarAsStd140>::std140_from_vec3(vec)
     }
-    fn from_vec4(vec: Self::OutputVec4) -> [Self::Output; 4] {
-        <i32 as ScalarAsStd140>::from_vec4(vec)
+    fn std140_from_vec4(vec: Self::OutputVec4) -> [Self::Output; 4] {
+        <i32 as ScalarAsStd140>::std140_from_vec4(vec)
     }
 
-    fn to_vec2(value: [Self::Output; 2]) -> Self::OutputVec2 {
-        <i32 as ScalarAsStd140>::to_vec2(value)
+    fn std140_to_vec2(value: [Self::Output; 2]) -> Self::OutputVec2 {
+        <i32 as ScalarAsStd140>::std140_to_vec2(value)
     }
-    fn to_vec3(value: [Self::Output; 3]) -> Self::OutputVec3 {
-        <i32 as ScalarAsStd140>::to_vec3(value)
+    fn std140_to_vec3(value: [Self::Output; 3]) -> Self::OutputVec3 {
+        <i32 as ScalarAsStd140>::std140_to_vec3(value)
     }
-    fn to_vec4(value: [Self::Output; 4]) -> Self::OutputVec4 {
-        <i32 as ScalarAsStd140>::to_vec4(value)
+    fn std140_to_vec4(value: [Self::Output; 4]) -> Self::OutputVec4 {
+        <i32 as ScalarAsStd140>::std140_to_vec4(value)
     }
 }
 
@@ -58,23 +58,23 @@ impl ScalarAsStd430 for s32 {
     type OutputVec3 = <i32 as ScalarAsStd430>::OutputVec3;
     type OutputVec4 = <i32 as ScalarAsStd430>::OutputVec4;
 
-    fn from_vec2(vec: Self::OutputVec2) -> [Self::Output; 2] {
-        <i32 as ScalarAsStd430>::from_vec2(vec)
+    fn std430_from_vec2(vec: Self::OutputVec2) -> [Self::Output; 2] {
+        <i32 as ScalarAsStd430>::std430_from_vec2(vec)
     }
-    fn from_vec3(vec: Self::OutputVec3) -> [Self::Output; 3] {
-        <i32 as ScalarAsStd430>::from_vec3(vec)
+    fn std430_from_vec3(vec: Self::OutputVec3) -> [Self::Output; 3] {
+        <i32 as ScalarAsStd430>::std430_from_vec3(vec)
     }
-    fn from_vec4(vec: Self::OutputVec4) -> [Self::Output; 4] {
-        <i32 as ScalarAsStd430>::from_vec4(vec)
+    fn std430_from_vec4(vec: Self::OutputVec4) -> [Self::Output; 4] {
+        <i32 as ScalarAsStd430>::std430_from_vec4(vec)
     }
 
-    fn to_vec2(value: [Self::Output; 2]) -> Self::OutputVec2 {
-        <i32 as ScalarAsStd430>::to_vec2(value)
+    fn std430_to_vec2(value: [Self::Output; 2]) -> Self::OutputVec2 {
+        <i32 as ScalarAsStd430>::std430_to_vec2(value)
     }
-    fn to_vec3(value: [Self::Output; 3]) -> Self::OutputVec3 {
-        <i32 as ScalarAsStd430>::to_vec3(value)
+    fn std430_to_vec3(value: [Self::Output; 3]) -> Self::OutputVec3 {
+        <i32 as ScalarAsStd430>::std430_to_vec3(value)
     }
-    fn to_vec4(value: [Self::Output; 4]) -> Self::OutputVec4 {
-        <i32 as ScalarAsStd430>::to_vec4(value)
+    fn std430_to_vec4(value: [Self::Output; 4]) -> Self::OutputVec4 {
+        <i32 as ScalarAsStd430>::std430_to_vec4(value)
     }
 }

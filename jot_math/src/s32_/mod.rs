@@ -10,6 +10,7 @@ use super::*;
 mod aabb;
 mod as_std;
 mod mat;
+mod serde_;
 mod vec;
 pub use aabb::*;
 pub use mat::*;
@@ -28,15 +29,22 @@ pub trait AsS32 {
     fn as_s32(self) -> Self::Output;
 }
 
+impl Zero for s32 {
+    const ZERO: Self = Self(0);
+}
+impl One for s32 {
+    const ONE: Self = Self(1 << Self::FRACT_BITS);
+}
+impl NegOne for s32 {
+    const NEG_ONE: Self = Self(-1 << Self::FRACT_BITS);
+}
+
 impl s32 {
     pub const BITS: usize = 32;
     pub const FRACT_BITS: usize = 8;
     pub const FRACT_SCALE_F32: f32 = 1.0 / 256.0;
     pub const FRACT_SCALE_F64: f64 = 1.0 / 256.0;
 
-    pub const ZERO: Self = Self(0);
-    pub const ONE: Self = Self(1 << Self::FRACT_BITS);
-    pub const NEG_ONE: Self = Self(-1 << Self::FRACT_BITS);
     pub const EPSILON: Self = Self(1);
     pub const NEG_EPSILON: Self = Self(-1);
     pub const HALF: Self = Self(1 << (Self::FRACT_BITS - 1));

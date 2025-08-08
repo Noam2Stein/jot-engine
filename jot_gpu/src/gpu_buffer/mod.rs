@@ -12,6 +12,7 @@ mod array;
 mod binding;
 pub use array::*;
 
+#[derive_where(crate = "derive_where")]
 #[derive_where(Debug, Clone)]
 pub struct GpuBuffer<T: ?Sized> {
     pub inner: Option<wgpu::Buffer>,
@@ -19,6 +20,7 @@ pub struct GpuBuffer<T: ?Sized> {
 }
 
 #[derive(Debug)]
+#[derive_where(crate = "derive_where")]
 #[derive_where(Clone, Copy)]
 pub struct GpuBufferDesc<'a, T: ?Sized> {
     pub label: Option<&'a str>,

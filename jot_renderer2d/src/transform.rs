@@ -1,5 +1,7 @@
 use std::fmt::Debug;
 
+use serde::{Deserialize, Serialize};
+
 use super::*;
 
 pub trait Transform2D: Debug + Copy + PartialEq {
@@ -26,7 +28,7 @@ pub trait Transform2D: Debug + Copy + PartialEq {
     const WGSL_VERTEX_LOGIC: &str;
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct Pos2D {
     pub pos: SVec2P,
 }

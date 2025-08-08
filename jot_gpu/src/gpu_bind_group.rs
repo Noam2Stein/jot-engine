@@ -6,6 +6,7 @@ use super::*;
 
 pub use jot_gpu_proc_macros::{GpuBindings, GpuBindings_Local};
 
+#[derive_where(crate = "derive_where")]
 #[derive_where(Debug, Clone)]
 pub struct GpuBindGroup<T: GpuBindings> {
     pub inner: wgpu::BindGroup,
@@ -75,29 +76,29 @@ impl<T: GpuBindings> GpuFrom<&T> for GpuBindGroup<T> {
     }
 }
 
-macro_loop! {
+repetitive! {
     @for N in 0..=12 {
         unsafe impl<
-            @for n in 0..@N {
-                @[T @n]: GpuBindings,
+            @for n in 0..N {
+                @['T n]: GpuBindings,
             }
         > GpuBindings for (
-            @for n in 0..@N {
-                @[T @n],
+            @for n in 0..N {
+                @['T n],
             }
         ) {
-            const BINDING_COUNT: usize = 0 @for n in 0..@N {
-                + @[T @n]::BINDING_COUNT
+            const BINDING_COUNT: usize = 0 @for n in 0..N {
+                + @['T n]::BINDING_COUNT
             };
 
             fn push_layout_entries(_entries: &mut Vec<wgpu::BindGroupLayoutEntry>, _binding: &mut u32) {
-                @for n in 0..@N {
-                    @[T @n]::push_layout_entries(_entries, _binding);
+                @for n in 0..N {
+                    @['T n]::push_layout_entries(_entries, _binding);
                 }
             }
 
             fn push_entries<'s>(&'s self, _entries: &mut Vec<wgpu::BindGroupEntry<'s>>, _binding: &mut u32) {
-                @for n in 0..@N {
+                @for n in 0..N {
                     self.@n.push_entries(_entries, _binding);
                 }
             }

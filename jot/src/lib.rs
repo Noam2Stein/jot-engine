@@ -1,26 +1,34 @@
-use jot_math::macro_loop;
+pub use jot_macros::*;
 
-macro_loop! {
+repetitive! {
     @for feature in [
-        game,
-        gpu,
-        input,
-        math,
-        window,
-        renderer2d,
-        fixed,
-        scheme,
-        collections,
-        ecs,
-        asset,
-        scene,
-        camera,
-        chunk,
-        tilemap,
+        // core
+        'window,
+        'math,
+        'gpu,
+        'input,
+        'collections,
+
+        // basic
+        'game,
+        'asset,
+        'scene,
+        'fixed,
+        'serialize,
+        'scheme,
+
+        // common
+        'ecs,
+        'camera,
+
+        // 2d
+        'renderer2d,
+        'tilemap,
+        'chunk,
     ] {
-        #[cfg(feature = @[@feature => str])]
+        #[cfg(feature = @str[feature])]
         pub mod @feature {
-            pub use @[jot_ @feature]::*;
+            pub use @['jot_ feature]::*;
         }
     }
 }

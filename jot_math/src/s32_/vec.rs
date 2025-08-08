@@ -12,10 +12,6 @@ pub trait S32VectorExt<const N: usize>
 where
     Usize<N>: VecLen,
 {
-    const ZERO: Self;
-    const ONE: Self;
-    const NEG_ONE: Self;
-
     const EPSILON: Self;
     const NEG_EPSILON: Self;
 
@@ -43,10 +39,6 @@ impl<const N: usize, A: VecAlignment> S32VectorExt<N> for Vector<N, s32, A>
 where
     Usize<N>: VecLen,
 {
-    const ZERO: Self = Vector::splat(s32::ZERO);
-    const ONE: Self = Vector::splat(s32::ONE);
-    const NEG_ONE: Self = Vector::splat(s32::NEG_ONE);
-
     const EPSILON: Self = Vector::splat(s32::EPSILON);
     const NEG_EPSILON: Self = Vector::splat(s32::NEG_EPSILON);
 

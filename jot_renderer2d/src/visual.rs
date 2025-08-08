@@ -1,5 +1,7 @@
 use std::{fmt::Debug, mem::offset_of};
 
+use serde::{Deserialize, Serialize};
+
 use super::*;
 
 pub trait Visual2D: Debug + Copy + PartialEq {
@@ -33,7 +35,7 @@ pub trait Visual2D: Debug + Copy + PartialEq {
     const WGSL_FRAGMENT_LOGIC: &str;
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Sprite {
     pub texture_rect: URectP,
 }
@@ -44,13 +46,13 @@ pub struct SpriteBindings {
     pub pixels_per_unit: GpuBuffer<f32>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct ColoredSprite {
     pub texture_rect: URectP,
     pub color: FVec4P,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Colored {
     pub size: FVec2P,
     pub color: FVec4P,

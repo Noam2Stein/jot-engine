@@ -8,7 +8,6 @@ mod camera;
 mod render_input;
 mod tilemap;
 mod transform;
-pub use asset::*;
 pub use camera::*;
 pub use render_input::*;
 pub use tilemap::*;
