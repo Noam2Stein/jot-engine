@@ -28,6 +28,5 @@ impl Input {
 
             jump: (KeyCode::Space, ButtonCode::South, ButtonCode::East).into(),
         }
-        .flat()
     }
 }
