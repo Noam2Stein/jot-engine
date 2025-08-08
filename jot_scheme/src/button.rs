@@ -138,7 +138,7 @@ mod private {
                     if let Some(binding_idx) =
                         resolver.binding_map.get(&ButtonBinding::Value(*code))
                     {
-                        set_binding(resolver, *binding_idx, *value > 8);
+                        set_binding(resolver, *binding_idx, *value > 6);
                     }
                 }
 
